@@ -121,6 +121,8 @@ def _normalize_card(card: dict[str, Any], card_limits: dict[str, int] | None = N
         "dp": card.get("dp"),
         "attribute": card.get("attribute"),
         "rarity": card.get("rarity"),
+        "tcgplayer_name": card.get("tcgplayer_name"),
+        "tcgplayer_id": card.get("tcgplayer_id"),
         "restriction_limit": get_card_limit(card, card_limits),
         "stage": card.get("stage"),
         "artist": card.get("artist"),

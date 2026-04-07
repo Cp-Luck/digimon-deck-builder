@@ -268,6 +268,28 @@ def test_search_cards_exposes_restriction_limits(tmp_path, monkeypatch):
     assert cards_by_id["BT1-003"]["restriction_limit"] is None
 
 
+def test_search_cards_exposes_tcgplayer_fields(monkeypatch):
+    """Ensure existing TCGplayer fields are passed through for safe frontend links."""
+    sample_cards = [
+        {
+            "id": "BT1-001",
+            "name": "Agumon",
+            "type": "Digimon",
+            "color": "Red",
+            "tcgplayer_name": "Agumon",
+            "tcgplayer_id": 483247,
+            "set_name": ["BT-01"],
+        }
+    ]
+    monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
+
+    response = client.get("/api/cards/search")
+
+    assert response.status_code == 200
+    assert response.json()["cards"][0]["tcgplayer_name"] == "Agumon"
+    assert response.json()["cards"][0]["tcgplayer_id"] == 483247
+
+
 def test_add_and_remove_current_deck_card(monkeypatch):
     """Verify that cards can be added to and removed from the active deck."""
     monkeypatch.setattr(api_module, "current_deck_store", CurrentDeckStore())
