@@ -105,9 +105,25 @@ def _normalize_card(card: dict[str, Any]) -> dict[str, Any]:
         "name": card.get("name"),
         "type": card.get("type"),
         "color": card.get("color"),
+        "color2": card.get("color2"),
         "level": card.get("level"),
         "play_cost": card.get("play_cost"),
+        "evolution_cost": card.get("evolution_cost"),
+        "evolution_color": card.get("evolution_color"),
+        "evolution_level": card.get("evolution_level"),
+        "xros_req": card.get("xros_req"),
+        "digi_type": card.get("digi_type"),
+        "digi_type2": card.get("digi_type2"),
+        "digi_type3": card.get("digi_type3"),
+        "digi_type4": card.get("digi_type4"),
+        "form": card.get("form"),
+        "dp": card.get("dp"),
+        "attribute": card.get("attribute"),
         "rarity": card.get("rarity"),
+        "stage": card.get("stage"),
+        "artist": card.get("artist"),
+        "link_requirements": card.get("link_requirements"),
+        "link_dp": card.get("link_dp"),
         "set_name": _card_set_names(card),
         "image_url": resolve_card_image_url(card),
         "pretty_url": card.get("pretty_url"),
@@ -134,12 +150,46 @@ def _set_code_sort_key(set_code: str) -> tuple[str, int, str]:
     return (prefix, int(number) if number else 0, set_code)
 
 
+EXACT_MATCH_FILTER_FIELDS = {
+    "level",
+    "play_cost",
+    "evolution_cost",
+    "evolution_color",
+    "evolution_level",
+    "color2",
+    "dp",
+    "link_dp",
+}
+
+
+def _matches_field_filter(card: dict[str, Any], field_name: str, expected_value: str, *, exact: bool = False) -> bool:
+    """Check whether a single card field matches a requested filter value."""
+    if not expected_value:
+        return True
+
+    raw_value = card.get(field_name)
+    if raw_value is None:
+        return False
+
+    if isinstance(raw_value, (list, tuple, set)):
+        normalized_actual = " ".join(str(item).strip().lower() for item in raw_value if item is not None)
+    else:
+        normalized_actual = str(raw_value).strip().lower()
+
+    normalized_expected = expected_value.strip().lower()
+    if not normalized_actual:
+        return False
+
+    return normalized_actual == normalized_expected if exact else normalized_expected in normalized_actual
+
+
 def _matches_card_filters(
     card: dict[str, Any],
     q: str = "",
     color: str = "",
     card_type: str = "",
     pack: str = "",
+    extra_filters: dict[str, str] | None = None,
 ) -> bool:
     """Return whether a card matches the current search and filter criteria."""
     normalized_name = str(card.get("name") or "").lower()
@@ -150,6 +200,7 @@ def _matches_card_filters(
     normalized_set_code = _card_set_code(card).lower()
     normalized_query = q.strip().lower()
     selected_packs = _parse_pack_filters(pack)
+    extra_filters = extra_filters or {}
 
     if normalized_query and normalized_query not in " ".join(
         [normalized_name, normalized_id, normalized_type, normalized_sets, normalized_set_code]
@@ -161,6 +212,16 @@ def _matches_card_filters(
         return False
     if selected_packs and normalized_set_code.upper() not in selected_packs:
         return False
+
+    for field_name, expected_value in extra_filters.items():
+        if not _matches_field_filter(
+            card,
+            field_name,
+            expected_value,
+            exact=field_name in EXACT_MATCH_FILTER_FIELDS,
+        ):
+            return False
+
     return True
 
 
@@ -176,13 +237,61 @@ def get_cards(
     color: str = Query(default=""),
     card_type: str = Query(default=""),
     pack: str = Query(default=""),
+    level: str = Query(default=""),
+    play_cost: str = Query(default=""),
+    evolution_cost: str = Query(default=""),
+    evolution_color: str = Query(default=""),
+    evolution_level: str = Query(default=""),
+    xros_req: str = Query(default=""),
+    color2: str = Query(default=""),
+    digi_type: str = Query(default=""),
+    digi_type2: str = Query(default=""),
+    digi_type3: str = Query(default=""),
+    digi_type4: str = Query(default=""),
+    form: str = Query(default=""),
+    dp: str = Query(default=""),
+    attribute: str = Query(default=""),
+    rarity: str = Query(default=""),
+    stage: str = Query(default=""),
+    artist: str = Query(default=""),
+    link_requirements: str = Query(default=""),
+    link_dp: str = Query(default=""),
     limit: int = Query(default=60, ge=1, le=500),
 ) -> dict[str, Any]:
     """Return locally cached cards filtered by the provided query parameters."""
+    advanced_filters = {
+        "level": level,
+        "play_cost": play_cost,
+        "evolution_cost": evolution_cost,
+        "evolution_color": evolution_color,
+        "evolution_level": evolution_level,
+        "xros_req": xros_req,
+        "color2": color2,
+        "digi_type": digi_type,
+        "digi_type2": digi_type2,
+        "digi_type3": digi_type3,
+        "digi_type4": digi_type4,
+        "form": form,
+        "dp": dp,
+        "attribute": attribute,
+        "rarity": rarity,
+        "stage": stage,
+        "artist": artist,
+        "link_requirements": link_requirements,
+        "link_dp": link_dp,
+    }
     filtered_cards = [
         _normalize_card(card)
         for card in load_cards()
-        if isinstance(card, dict) and _matches_card_filters(card, q=q, color=color, card_type=card_type, pack=pack)
+        if isinstance(card, dict)
+        and _matches_card_filters(
+            card,
+            q=q,
+            color=color,
+            card_type=card_type,
+            pack=pack,
+            extra_filters=advanced_filters,
+        )
     ]
     return {
         "count": len(filtered_cards),
@@ -197,10 +306,54 @@ def search_cards(
     color: str = Query(default=""),
     card_type: str = Query(default=""),
     pack: str = Query(default=""),
+    level: str = Query(default=""),
+    play_cost: str = Query(default=""),
+    evolution_cost: str = Query(default=""),
+    evolution_color: str = Query(default=""),
+    evolution_level: str = Query(default=""),
+    xros_req: str = Query(default=""),
+    color2: str = Query(default=""),
+    digi_type: str = Query(default=""),
+    digi_type2: str = Query(default=""),
+    digi_type3: str = Query(default=""),
+    digi_type4: str = Query(default=""),
+    form: str = Query(default=""),
+    dp: str = Query(default=""),
+    attribute: str = Query(default=""),
+    rarity: str = Query(default=""),
+    stage: str = Query(default=""),
+    artist: str = Query(default=""),
+    link_requirements: str = Query(default=""),
+    link_dp: str = Query(default=""),
     limit: int = Query(default=60, ge=1, le=500),
 ) -> dict[str, Any]:
     """Alias route for card searching used by the frontend."""
-    return get_cards(q=q, color=color, card_type=card_type, pack=pack, limit=limit)
+    return get_cards(
+        q=q,
+        color=color,
+        card_type=card_type,
+        pack=pack,
+        level=level,
+        play_cost=play_cost,
+        evolution_cost=evolution_cost,
+        evolution_color=evolution_color,
+        evolution_level=evolution_level,
+        xros_req=xros_req,
+        color2=color2,
+        digi_type=digi_type,
+        digi_type2=digi_type2,
+        digi_type3=digi_type3,
+        digi_type4=digi_type4,
+        form=form,
+        dp=dp,
+        attribute=attribute,
+        rarity=rarity,
+        stage=stage,
+        artist=artist,
+        link_requirements=link_requirements,
+        link_dp=link_dp,
+        limit=limit,
+    )
 
 
 @router.get("/cards/sets")

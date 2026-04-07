@@ -74,6 +74,90 @@ def test_search_cards_accepts_multiple_set_filters(monkeypatch):
     assert {card["id"] for card in response.json()["cards"]} == {"BT1-001", "EX1-001"}
 
 
+def test_search_cards_accepts_advanced_field_filters(monkeypatch):
+    """Ensure advanced numeric and text-based field filters are applied by the card search route."""
+    sample_cards = [
+        {
+            "id": "AD1-002",
+            "name": "Aldamon",
+            "type": "Digimon",
+            "level": 5,
+            "play_cost": 8,
+            "evolution_cost": 3,
+            "evolution_color": "Red",
+            "evolution_level": 4,
+            "xros_req": "Takuya Kanbara",
+            "color": "Red",
+            "color2": "Blue",
+            "digi_type": "Wizard",
+            "digi_type2": "Hybrid",
+            "digi_type3": None,
+            "digi_type4": None,
+            "form": "Hybrid",
+            "dp": 8000,
+            "attribute": "Variable",
+            "rarity": "SR",
+            "stage": "Hybrid",
+            "artist": "Artist A",
+            "link_requirements": "Red trait",
+            "link_dp": 2000,
+            "set_name": ["AD-01"],
+        },
+        {
+            "id": "BT1-010",
+            "name": "Greymon",
+            "type": "Digimon",
+            "level": 4,
+            "play_cost": 5,
+            "evolution_cost": 2,
+            "evolution_color": "Yellow",
+            "evolution_level": 3,
+            "xros_req": "Other card",
+            "color": "Red",
+            "color2": None,
+            "digi_type": "Dragon",
+            "form": "Champion",
+            "dp": 4000,
+            "attribute": "Vaccine",
+            "rarity": "C",
+            "stage": "Champion",
+            "artist": "Artist B",
+            "link_requirements": "Yellow trait",
+            "link_dp": None,
+            "set_name": ["BT-01"],
+        },
+    ]
+    monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
+
+    response = client.get(
+        "/api/cards/search",
+        params={
+            "card_type": "Digimon",
+            "level": "5",
+            "play_cost": "8",
+            "evolution_cost": "3",
+            "evolution_color": "Red",
+            "evolution_level": "4",
+            "xros_req": "takuya",
+            "color2": "Blue",
+            "digi_type": "Wizard",
+            "digi_type2": "Hybrid",
+            "form": "hybrid",
+            "dp": "8000",
+            "attribute": "variable",
+            "rarity": "sr",
+            "stage": "hybrid",
+            "artist": "artist a",
+            "link_requirements": "red",
+            "link_dp": "2000",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["count"] == 1
+    assert response.json()["cards"][0]["id"] == "AD1-002"
+
+
 def test_get_card_sets_returns_unique_sorted_options(tmp_path, monkeypatch):
     """Ensure the set-options route returns sorted folder names from the export directory."""
     by_set_dir = tmp_path / "by_set"
