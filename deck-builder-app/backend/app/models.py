@@ -11,7 +11,7 @@ class Card(BaseModel):
     image_url: str | None = None
     level: int | None = None
     play_cost: int | None = None
-    count: int = Field(default=1, ge=1)
+    count: int = Field(default=1, ge=1, le=4)
 
 
 class Deck(BaseModel):

@@ -228,7 +228,10 @@ def get_current_deck() -> dict[str, Any]:
 
 @router.post("/deck/add")
 def add_card_to_deck(card: Card) -> dict[str, Any]:
-    return current_deck_store.add_card(card)
+    try:
+        return current_deck_store.add_card(card)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
 
 @router.post("/deck/remove")
@@ -243,7 +246,10 @@ def clear_current_deck() -> dict[str, Any]:
 
 @router.post("/deck/load")
 def load_current_deck(deck: Deck) -> dict[str, Any]:
-    return current_deck_store.set_deck(deck)
+    try:
+        return current_deck_store.set_deck(deck)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
 
 @router.get("/decks")
@@ -261,5 +267,8 @@ def get_deck(deck_name: str) -> dict[str, Any]:
 
 @router.post("/decks")
 def create_or_update_deck(deck: Deck) -> dict[str, Any]:
-    saved_deck = deck_manager.save_deck(deck)
+    try:
+        saved_deck = deck_manager.save_deck(deck)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
     return {"message": "Deck saved successfully", "deck": saved_deck}

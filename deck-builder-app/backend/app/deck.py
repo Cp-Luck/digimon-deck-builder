@@ -1,9 +1,140 @@
 from pathlib import Path
 from typing import Any
 
-from config import SAVED_DECKS_FILE
+from config import RESTRICTED_LIST_FILE, SAVED_DECKS_FILE
 from app.models import Card, Deck
 from app.utils import load_json, save_json
+
+MAX_COPIES_PER_CARD = 4
+RESTRICTED_LIST_DEFAULT = {
+    "card_limits": {},
+    "banned_cards": [],
+    "banned_pairs": [],
+}
+
+
+def _card_key(card: dict[str, Any]) -> str:
+    return str(card.get("id") or card.get("name") or "").strip().lower()
+
+
+def _card_label(card: dict[str, Any]) -> str:
+    return str(card.get("id") or card.get("name") or "This card")
+
+
+def _normalize_restriction_key(value: Any) -> str:
+    return str(value or "").strip().lower()
+
+
+def _normalize_count(value: Any) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = 1
+    return max(1, min(parsed, MAX_COPIES_PER_CARD))
+
+
+def load_restricted_list() -> dict[str, Any]:
+    data = load_json(RESTRICTED_LIST_FILE, default_content=RESTRICTED_LIST_DEFAULT)
+    if not isinstance(data, dict):
+        return dict(RESTRICTED_LIST_DEFAULT)
+
+    return {
+        "card_limits": data.get("card_limits", {}) if isinstance(data.get("card_limits"), dict) else {},
+        "banned_cards": data.get("banned_cards", []) if isinstance(data.get("banned_cards"), list) else [],
+        "banned_pairs": data.get("banned_pairs", []) if isinstance(data.get("banned_pairs"), list) else [],
+    }
+
+
+def _load_card_limits() -> dict[str, int]:
+    restricted_list = load_restricted_list()
+    limits: dict[str, int] = {}
+
+    for raw_key, raw_value in restricted_list.get("card_limits", {}).items():
+        normalized_key = _normalize_restriction_key(raw_key)
+        if not normalized_key:
+            continue
+        try:
+            parsed_limit = int(raw_value)
+        except (TypeError, ValueError):
+            continue
+        limits[normalized_key] = max(0, min(parsed_limit, MAX_COPIES_PER_CARD))
+
+    for raw_key in restricted_list.get("banned_cards", []):
+        normalized_key = _normalize_restriction_key(raw_key)
+        if normalized_key:
+            limits[normalized_key] = 0
+
+    return limits
+
+
+def _load_banned_pairs() -> list[tuple[str, str]]:
+    restricted_list = load_restricted_list()
+    normalized_pairs: list[tuple[str, str]] = []
+
+    for pair in restricted_list.get("banned_pairs", []):
+        first = second = None
+        if isinstance(pair, dict):
+            first = pair.get("a") or pair.get("first") or pair.get("card_a")
+            second = pair.get("b") or pair.get("second") or pair.get("card_b")
+        elif isinstance(pair, (list, tuple)) and len(pair) >= 2:
+            first, second = pair[0], pair[1]
+
+        first_key = _normalize_restriction_key(first)
+        second_key = _normalize_restriction_key(second)
+        if first_key and second_key and first_key != second_key:
+            normalized_pairs.append((first_key, second_key))
+
+    return normalized_pairs
+
+
+def validate_deck_cards(cards: list[dict[str, Any]]) -> None:
+    card_limits = _load_card_limits()
+    present_cards = {key: card for card in cards if (key := _card_key(card))}
+
+    for key, card in present_cards.items():
+        allowed_copies = card_limits.get(key, MAX_COPIES_PER_CARD)
+        if allowed_copies <= 0:
+            raise ValueError(f"{_card_label(card)} is banned and cannot be included in decks.")
+
+        current_count = int(card.get("count", 1))
+        if current_count > allowed_copies:
+            copy_word = "copy" if allowed_copies == 1 else "copies"
+            raise ValueError(f"{_card_label(card)} is limited to {allowed_copies} {copy_word} per deck.")
+
+    for first_key, second_key in _load_banned_pairs():
+        if first_key in present_cards and second_key in present_cards:
+            first_label = _card_label(present_cards[first_key])
+            second_label = _card_label(present_cards[second_key])
+            raise ValueError(
+                f"Banned pair: {first_label} and {second_label} cannot be included in the same deck."
+            )
+
+
+def _normalize_deck_cards(cards: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    normalized_cards: list[dict[str, Any]] = []
+
+    for raw_card in cards:
+        card_data = dict(raw_card)
+        card_data["count"] = _normalize_count(card_data.get("count", 1))
+        current_key = _card_key(card_data)
+        if not current_key:
+            continue
+
+        for existing_card in normalized_cards:
+            if _card_key(existing_card) == current_key:
+                existing_card["count"] = min(
+                    MAX_COPIES_PER_CARD,
+                    int(existing_card.get("count", 1)) + int(card_data.get("count", 1)),
+                )
+                for key, value in card_data.items():
+                    if existing_card.get(key) in (None, "") and value not in (None, ""):
+                        existing_card[key] = value
+                break
+        else:
+            normalized_cards.append(card_data)
+
+    validate_deck_cards(normalized_cards)
+    return normalized_cards
 
 
 class DeckManager:
@@ -16,6 +147,7 @@ class DeckManager:
     def save_deck(self, deck: Deck) -> dict[str, Any]:
         decks = self.list_decks()
         deck_data = deck.model_dump()
+        deck_data["cards"] = _normalize_deck_cards(deck_data.get("cards", []))
 
         for index, existing_deck in enumerate(decks):
             if existing_deck["name"].lower() == deck.name.lower():
@@ -48,32 +180,41 @@ class CurrentDeckStore:
 
     def set_deck(self, deck: Deck) -> dict[str, Any]:
         self.deck_name = deck.name or "Current Deck"
-        self.cards = [card.model_dump() for card in deck.cards]
+        self.cards = _normalize_deck_cards([card.model_dump() for card in deck.cards])
         return self.get_deck()
 
     def add_card(self, card: Card) -> dict[str, Any]:
         card_data = card.model_dump()
-        card_key = str(card_data.get("id") or card_data["name"]).lower()
+        card_data["count"] = _normalize_count(card_data.get("count", 1))
+        card_key = _card_key(card_data)
+        next_cards = [dict(existing_card) for existing_card in self.cards]
 
-        for existing_card in self.cards:
-            existing_key = str(existing_card.get("id") or existing_card.get("name", "")).lower()
+        for existing_card in next_cards:
+            existing_key = _card_key(existing_card)
             if existing_key == card_key:
-                existing_card["count"] = int(existing_card.get("count", 1)) + int(card_data.get("count", 1))
+                existing_card["count"] = min(
+                    MAX_COPIES_PER_CARD,
+                    int(existing_card.get("count", 1)) + int(card_data.get("count", 1)),
+                )
                 for key, value in card_data.items():
                     if existing_card.get(key) in (None, "") and value not in (None, ""):
                         existing_card[key] = value
+                validate_deck_cards(next_cards)
+                self.cards = next_cards
                 return self.get_deck()
 
-        self.cards.append(card_data)
+        next_cards.append(card_data)
+        validate_deck_cards(next_cards)
+        self.cards = next_cards
         return self.get_deck()
 
     def remove_card(self, card: Card) -> dict[str, Any]:
         card_data = card.model_dump()
-        card_key = str(card_data.get("id") or card_data["name"]).lower()
+        card_key = _card_key(card_data)
         remove_count = int(card_data.get("count", 1))
 
         for index, existing_card in enumerate(self.cards):
-            existing_key = str(existing_card.get("id") or existing_card.get("name", "")).lower()
+            existing_key = _card_key(existing_card)
             if existing_key != card_key:
                 continue
 

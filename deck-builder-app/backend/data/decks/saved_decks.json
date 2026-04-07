@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "name": "Too Many Agumon",
+    "cards": [
+      {
+        "id": "BT1-001",
+        "name": "Agumon",
+        "card_type": "Digimon",
+        "color": null,
+        "image_url": null,
+        "level": null,
+        "play_cost": null,
+        "count": 5
+      }
+    ]
+  }
+]

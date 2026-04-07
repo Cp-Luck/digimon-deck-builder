@@ -1,8 +1,10 @@
+import json
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 import app.api as api_module
+import app.deck as deck_module
 from app.deck import CurrentDeckStore, DeckManager
 from main import app
 
@@ -95,6 +97,99 @@ def test_add_and_remove_current_deck_card(monkeypatch):
     assert remove_response.status_code == 200
     assert deck_response.status_code == 200
     assert deck_response.json()["cards"][0]["count"] == 1
+
+
+def test_add_card_to_current_deck_caps_count_at_four(monkeypatch):
+    monkeypatch.setattr(api_module, "current_deck_store", CurrentDeckStore())
+
+    client.post(
+        "/api/deck/add",
+        json={"id": "BT1-001", "name": "Agumon", "card_type": "Digimon", "count": 4},
+    )
+    add_response = client.post(
+        "/api/deck/add",
+        json={"id": "BT1-001", "name": "Agumon", "card_type": "Digimon", "count": 1},
+    )
+
+    assert add_response.status_code == 200
+    assert add_response.json()["cards"][0]["count"] == 4
+
+
+def test_create_deck_rejects_more_than_four_copies():
+    response = client.post(
+        "/api/decks",
+        json={
+            "name": "Too Many Agumon",
+            "cards": [
+                {"id": "BT1-001", "name": "Agumon", "card_type": "Digimon", "count": 5}
+            ],
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_add_card_to_current_deck_rejects_restricted_limit(tmp_path, monkeypatch):
+    restriction_file = tmp_path / "restricted_list.json"
+    restriction_file.write_text(json.dumps({"card_limits": {"BT1-001": 1}}), encoding="utf-8")
+    monkeypatch.setattr(deck_module, "RESTRICTED_LIST_FILE", restriction_file)
+    monkeypatch.setattr(api_module, "current_deck_store", CurrentDeckStore())
+
+    client.post(
+        "/api/deck/add",
+        json={"id": "BT1-001", "name": "Agumon", "card_type": "Digimon", "count": 1},
+    )
+    add_response = client.post(
+        "/api/deck/add",
+        json={"id": "BT1-001", "name": "Agumon", "card_type": "Digimon", "count": 1},
+    )
+
+    assert add_response.status_code == 400
+    assert "limited to 1 copy" in add_response.json()["detail"]
+
+
+def test_create_deck_rejects_banned_card_from_restricted_list(tmp_path, monkeypatch):
+    restriction_file = tmp_path / "restricted_list.json"
+    restriction_file.write_text(json.dumps({"banned_cards": ["BT1-001"]}), encoding="utf-8")
+    monkeypatch.setattr(deck_module, "RESTRICTED_LIST_FILE", restriction_file)
+    monkeypatch.setattr(api_module, "deck_manager", DeckManager(tmp_path / "saved_decks.json"))
+
+    response = client.post(
+        "/api/decks",
+        json={
+            "name": "Banned Card Deck",
+            "cards": [
+                {"id": "BT1-001", "name": "Agumon", "card_type": "Digimon", "count": 1}
+            ],
+        },
+    )
+
+    assert response.status_code == 400
+    assert "banned" in response.json()["detail"].lower()
+
+
+def test_create_deck_rejects_banned_pair_from_restricted_list(tmp_path, monkeypatch):
+    restriction_file = tmp_path / "restricted_list.json"
+    restriction_file.write_text(
+        json.dumps({"banned_pairs": [{"a": "BT1-001", "b": "BT1-002"}]}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(deck_module, "RESTRICTED_LIST_FILE", restriction_file)
+    monkeypatch.setattr(api_module, "deck_manager", DeckManager(tmp_path / "saved_decks.json"))
+
+    response = client.post(
+        "/api/decks",
+        json={
+            "name": "Banned Pair Deck",
+            "cards": [
+                {"id": "BT1-001", "name": "Agumon", "card_type": "Digimon", "count": 1},
+                {"id": "BT1-002", "name": "Gabumon", "card_type": "Digimon", "count": 1},
+            ],
+        },
+    )
+
+    assert response.status_code == 400
+    assert "banned pair" in response.json()["detail"].lower()
 
 
 def test_search_cards_uses_remote_image_fallback(monkeypatch):

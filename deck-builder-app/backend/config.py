@@ -9,6 +9,7 @@ IMAGES_DIR = DATA_DIR / "images"
 SAVED_DECKS_FILE = DECKS_DIR / "saved_decks.json"
 CARD_FILE = CARDS_DIR / "all_cards.json"
 LAST_UPDATED_FILE = CARDS_DIR / "last_updated.txt"
+RESTRICTED_LIST_FILE = DATA_DIR / "restricted_list.json"
 
 BASE_URL = "https://digimoncard.io/api-public"
 REMOTE_IMAGE_BASE_URL = "https://images.digimoncard.io/images/cards"
