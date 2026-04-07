@@ -174,6 +174,38 @@ def test_get_card_sets_returns_unique_sorted_options(tmp_path, monkeypatch):
     assert response.json()["sets"] == ["BT1", "BT2", "BT10", "EX1"]
 
 
+def test_search_cards_rarity_filter_matches_exact_canonical_rarity(monkeypatch):
+    """Ensure selecting rarity R only returns R cards, including lowercase source values."""
+    sample_cards = [
+        {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "rarity": "R", "set_name": ["BT-01"]},
+        {"id": "BT1-002", "name": "Greymon", "type": "Digimon", "color": "Red", "rarity": "SR", "set_name": ["BT-01"]},
+        {"id": "BT1-003", "name": "Birdramon", "type": "Digimon", "color": "Red", "rarity": "r", "set_name": ["BT-01"]},
+        {"id": "BT1-004", "name": "Omnimon", "type": "Digimon", "color": "White", "rarity": "UR", "set_name": ["BT-01"]},
+    ]
+    monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
+
+    response = client.get("/api/cards/search", params={"rarity": "R"})
+
+    assert response.status_code == 200
+    assert response.json()["count"] == 2
+    assert {card["id"] for card in response.json()["cards"]} == {"BT1-001", "BT1-003"}
+
+
+def test_get_card_filter_options_returns_summary_data(tmp_path, monkeypatch):
+    """Ensure the frontend can fetch summarized field options for advanced filters."""
+    summary_file = tmp_path / "field_value_summary.json"
+    summary_file.write_text(
+        json.dumps({"rarity": {"C": 10, "R": 8}, "digi_type": {"Dragon": 4}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_module, "CARDS_DIR", tmp_path)
+
+    response = client.get("/api/cards/filter-options")
+
+    assert response.status_code == 200
+    assert response.json()["filters"] == {"rarity": {"C": 10, "R": 8}, "digi_type": {"Dragon": 4}}
+
+
 def test_add_and_remove_current_deck_card(monkeypatch):
     """Verify that cards can be added to and removed from the active deck."""
     monkeypatch.setattr(api_module, "current_deck_store", CurrentDeckStore())

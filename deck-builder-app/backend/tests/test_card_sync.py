@@ -99,12 +99,13 @@ def test_update_cards_refreshes_incomplete_saved_cards(monkeypatch):
 
 
 def test_sync_and_sort_cards_runs_update_then_sort(monkeypatch):
-    """Ensure the combined sync script runs card updating before set sorting."""
+    """Ensure the combined sync script runs update, sort, and summary generation in order."""
     calls: list[str] = []
 
     monkeypatch.setattr(sync_and_sort, "update_cards", lambda: calls.append("update"))
     monkeypatch.setattr(sync_and_sort, "sort_cards_by_set", lambda: calls.append("sort"))
+    monkeypatch.setattr(sync_and_sort, "summarize_card_fields", lambda: calls.append("summarize"))
 
     sync_and_sort.sync_and_sort_cards()
 
-    assert calls == ["update", "sort"]
+    assert calls == ["update", "sort", "summarize"]

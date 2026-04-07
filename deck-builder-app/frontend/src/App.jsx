@@ -87,11 +87,13 @@ function App() {
   const [filters, setFilters] = useState(defaultFilters)
   const [cards, setCards] = useState([])
   const [setOptions, setSetOptions] = useState([])
+  const [filterOptions, setFilterOptions] = useState({})
   const [deck, setDeck] = useState({ name: 'Current Deck', cards: [], total_cards: 0 })
   const [savedDecks, setSavedDecks] = useState([])
   const [deckName, setDeckName] = useState('My Digimon Deck')
   const [status, setStatus] = useState('Loading cards...')
   const [loadingCards, setLoadingCards] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState('')
 
   const searchParams = useMemo(() => {
     const params = new URLSearchParams()
@@ -119,6 +121,7 @@ function App() {
     fetchCurrentDeck()
     fetchSavedDecks()
     fetchSetOptions()
+    fetchFilterOptions()
   }, [])
 
   async function fetchCards() {
@@ -128,6 +131,12 @@ function App() {
       const data = await response.json()
       setCards(sortCardsById(data.cards || []))
       setStatus(`Showing ${data.count ?? 0} cards from the local database.`)
+
+      if (data.last_updated && data.last_updated !== lastUpdated) {
+        setLastUpdated(data.last_updated)
+        fetchSetOptions()
+        fetchFilterOptions()
+      }
     } catch (error) {
       setStatus(`Could not load cards: ${error.message}`)
     } finally {
@@ -152,6 +161,16 @@ function App() {
       setSetOptions(data.sets || [])
     } catch {
       setSetOptions([])
+    }
+  }
+
+  async function fetchFilterOptions() {
+    try {
+      const response = await fetch(`${API_BASE}/cards/filter-options`)
+      const data = await response.json()
+      setFilterOptions(data.filters || {})
+    } catch {
+      setFilterOptions({})
     }
   }
 
@@ -265,7 +284,12 @@ function App() {
       <p className="status-banner">{status}</p>
 
       <main className="layout-grid">
-        <FilterPanel filters={filters} onChange={setFilters} setOptions={setOptions} />
+        <FilterPanel
+          filters={filters}
+          onChange={setFilters}
+          setOptions={setOptions}
+          fieldOptions={filterOptions}
+        />
         <CardGrid cards={cards} loading={loadingCards} onAddCard={addCard} />
         <DeckPanel
           deck={deck}

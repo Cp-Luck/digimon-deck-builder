@@ -3,6 +3,7 @@
 Main entry points: the `/api` router, `get_cards()`, and deck management endpoints.
 """
 
+import json
 import time
 from typing import Any
 
@@ -150,6 +151,21 @@ def _set_code_sort_key(set_code: str) -> tuple[str, int, str]:
     return (prefix, int(number) if number else 0, set_code)
 
 
+def load_field_value_summary() -> dict[str, dict[str, int]]:
+    """Load the generated repeated-value summary used by the frontend filter selects."""
+    summary_path = CARDS_DIR / "field_value_summary.json"
+
+    if not summary_path.exists():
+        return {}
+
+    try:
+        payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    return payload if isinstance(payload, dict) else {}
+
+
 EXACT_MATCH_FILTER_FIELDS = {
     "level",
     "play_cost",
@@ -159,7 +175,16 @@ EXACT_MATCH_FILTER_FIELDS = {
     "color2",
     "dp",
     "link_dp",
+    "rarity",
 }
+
+
+def _normalize_filter_value(field_name: str, value: Any) -> str:
+    """Normalize filter values so summary-backed selects match the stored card data reliably."""
+    normalized = str(value).strip()
+    if field_name == "rarity":
+        return normalized.upper()
+    return normalized.lower()
 
 
 def _matches_field_filter(card: dict[str, Any], field_name: str, expected_value: str, *, exact: bool = False) -> bool:
@@ -172,11 +197,13 @@ def _matches_field_filter(card: dict[str, Any], field_name: str, expected_value:
         return False
 
     if isinstance(raw_value, (list, tuple, set)):
-        normalized_actual = " ".join(str(item).strip().lower() for item in raw_value if item is not None)
+        normalized_actual = " ".join(
+            _normalize_filter_value(field_name, item) for item in raw_value if item is not None
+        )
     else:
-        normalized_actual = str(raw_value).strip().lower()
+        normalized_actual = _normalize_filter_value(field_name, raw_value)
 
-    normalized_expected = expected_value.strip().lower()
+    normalized_expected = _normalize_filter_value(field_name, expected_value)
     if not normalized_actual:
         return False
 
@@ -375,6 +402,15 @@ def get_card_sets() -> dict[str, list[str]]:
         )
 
     return {"sets": sorted(set_codes, key=_set_code_sort_key)}
+
+
+@router.get("/cards/filter-options")
+def get_card_filter_options() -> dict[str, Any]:
+    """Return summarized field values so the frontend can build dynamic filter options."""
+    return {
+        "filters": load_field_value_summary(),
+        "last_updated": get_last_updated(),
+    }
 
 
 @router.get("/cards/local")

@@ -1,0 +1,372 @@
+# Card Field Value Summary
+
+This report only includes values that appear more than once in the local card dataset.
+
+## `attribute`
+
+- `Virus`: 1019
+- `Vaccine`: 880
+- `Data`: 794
+- `Free`: 141
+- `Variable`: 89
+- `Unknown`: 73
+- `System`: 13
+- `Social`: 10
+- `Tool`: 10
+- `Entertainment`: 8
+- `Game`: 7
+- `God`: 6
+- `Life`: 6
+- `Navi`: 5
+- `Ultimate`: 2
+
+## `color`
+
+- `Black`: 876
+- `Purple`: 854
+- `Red`: 842
+- `Yellow`: 812
+- `Green`: 759
+- `Blue`: 719
+- `White`: 162
+
+## `digi_type`
+
+- `Cyborg`: 260
+- `LIBERATOR`: 254
+- `X Antibody`: 232
+- `Lesser`: 141
+- `CS`: 140
+- `Beast`: 120
+- `TS`: 116
+- `Beastkin`: 114
+- `Puppet`: 106
+- `Holy Warrior`: 98
+- `Reptile`: 93
+- `Dinosaur`: 92
+- `Insectoid`: 92
+- `Dragonkin`: 91
+- `Machine`: 91
+- `Royal Knight`: 91
+- `Holy Beast`: 89
+- `Wizard`: 87
+- `Mutant`: 82
+- `Vegetation`: 74
+- `Xros Heart`: 70
+- `Mammal`: 68
+- `DM`: 63
+- `Iliad`: 62
+- `Shaman`: 60
+- `Undead`: 60
+- `Dark Animal`: 59
+- `Fairy`: 53
+- `ADVENTURE`: 49
+- `Demon Lord`: 47
+- `Unidentified`: 46
+- `Mini Dragon`: 42
+- `Seven Great Demon Lords`: 42
+- `Mollusk`: 41
+- `Hero`: 40
+- `SoC`: 38
+- `Avian`: 37
+- `Dark Dragon`: 36
+- `Blue Flare`: 34
+- `Flame`: 34
+- `Unknown`: 34
+- `Aquatic`: 33
+- `Composite`: 33
+- `Bagra Army`: 32
+- `Fallen Angel`: 32
+- `Legend-Arms`: 32
+- `Twilight`: 32
+- `Angel`: 29
+- `Titan`: 29
+- `Warrior`: 28
+- `Evil`: 26
+- `Giant Bird`: 26
+- `Demon`: 25
+- `Sea Beast`: 25
+- `Ten Warriors`: 25
+- `Olympos XII`: 24
+- `Beast Dragon`: 23
+- `Four Great Dragons`: 23
+- `Ghost`: 23
+- `Holy Dragon`: 23
+- `Amphibian`: 22
+- `DATA SQUAD`: 22
+- `Deva`: 22
+- `Dragon`: 22
+- `NSp`: 22
+- `D-Brigade`: 21
+- `DigiPolice`: 21
+- `Larva`: 21
+- `Archangel`: 20
+- `Light Dragon`: 20
+- `Mineral`: 20
+- `Royal Base`: 20
+- `BEATBREAK`: 19
+- `Hudie`: 19
+- `DS`: 18
+- `NSo`: 18
+- `Bird`: 17
+- `Bird Dragon`: 17
+- `Evil Dragon`: 17
+- `Glowing Dawn`: 17
+- `Rock`: 17
+- `SEEKERS`: 17
+- `Abadin Electronics`: 16
+- `Mythical Beast`: 16
+- `Mythical Dragon`: 16
+- `Weapon`: 16
+- `WG`: 16
+- `Aquabeast`: 15
+- `Ceratopsian`: 15
+- `Armor`: 14
+- `Birdkin`: 14
+- `Night Claw`: 14
+- `Three Great Angels`: 14
+- `Ver.1`: 14
+- `Appmon`: 13
+- `Baby Dragon`: 13
+- `Chronicle`: 13
+- `Crustacean`: 13
+- `Three Musketeers`: 13
+- `Ver.5`: 13
+- `Ancient Animal`: 12
+- `Beast Knight`: 12
+- `Sea Animal`: 12
+- `Ver.2`: 12
+- `ACCEL`: 11
+- `Ancient Dragon`: 11
+- `Ankylosaur`: 11
+- `Boss`: 11
+- `Bulb`: 11
+- `Four Sovereigns`: 11
+- `Mysterious Beast`: 11
+- `Unique`: 11
+- `Ver.3`: 11
+- `Vortex Warriors`: 11
+- `General`: 10
+- `Hunter`: 10
+- `Ice-Snow`: 10
+- `Leviathan`: 10
+- `Rock Dragon`: 10
+- `App Driver`: 9
+- `Dark Knight`: 9
+- `Dark Masters`: 9
+- `Enhancement`: 9
+- `Light Fang`: 9
+- `Plesiosaur`: 9
+- `Ver.4`: 9
+- `Cherub`: 8
+- `Machine Dragon`: 8
+- `Seraph`: 8
+- `Sky Dragon`: 8
+- `Ancient Bird`: 7
+- `CRT`: 7
+- `Holy Bird`: 7
+- `Witchelny`: 7
+- `Ancient Dragonkin`: 6
+- `Device`: 6
+- `Earth Dragon`: 6
+- `Magic Knight`: 6
+- `Zaxon`: 6
+- `Ancient`: 5
+- `Food`: 5
+- `Mine`: 5
+- `Throne`: 5
+- `3`: 4
+- `Abnormal`: 4
+- `Carnivorous Plant`: 4
+- `Dragon Warrior`: 4
+- `Mini Angel`: 4
+- `Mini Bird`: 4
+- `Mysterious Bird`: 4
+- `Wicked God`: 4
+- `ADAMAS`: 3
+- `Alien`: 3
+- `Ancient Fairy`: 3
+- `Ancient Fish`: 3
+- `Big Death-Stars`: 3
+- `Demon God`: 3
+- `Flick (App Name)`: 3
+- `Magic Warrior`: 3
+- `Major`: 3
+- `Perfect`: 3
+- `Plug-In`: 3
+- `Tap (App Name)`: 3
+- `X Program`: 3
+- `9000`: 2
+- `Ability Synthesis Agent`: 2
+- `Ancient Aquabeast`: 2
+- `Ancient Birdkin`: 2
+- `Ancient Crustacean`: 2
+- `Ancient Holy Warrior`: 2
+- `Ancient Insect`: 2
+- `Ancient Mineral`: 2
+- `Ancient Mutant`: 2
+- `Ancient Mythical Beast`: 2
+- `Ancient Plant`: 2
+- `Authority`: 2
+- `Espionage Agent`: 2
+- `Fire Dragon`: 2
+- `God Beast`: 2
+- `Holy Sword`: 2
+- `Invader`: 2
+- `Minor`: 2
+- `Monk`: 2
+- `NO DATA`: 2
+- `Parasite`: 2
+- `Principality`: 2
+- `Search (App Name)`: 2
+- `Super Major`: 2
+- `Super Search (App Name)`: 2
+- `Tathāgata`: 2
+- `Tropical Fish`: 2
+- `Unanalyzable`: 2
+- `Virtue`: 2
+
+## `dp`
+
+- `7000`: 445
+- `1000`: 335
+- `5000`: 335
+- `12000`: 326
+- `4000`: 320
+- `2000`: 269
+- `11000`: 237
+- `6000`: 227
+- `8000`: 168
+- `3000`: 116
+- `13000`: 103
+- `15000`: 54
+- `10000`: 53
+- `9000`: 33
+- `14000`: 31
+- `16000`: 18
+- `17000`: 2
+
+## `evolution_color`
+
+- `Red`: 232
+- `Blue`: 210
+- `Purple`: 199
+- `Black`: 190
+- `Green`: 186
+- `Yellow`: 186
+- `All`: 8
+- `White`: 3
+
+## `evolution_cost`
+
+- `3`: 920
+- `2`: 603
+- `0`: 574
+- `4`: 532
+- `1`: 148
+- `5`: 139
+- `6`: 45
+- `7`: 8
+- `8`: 2
+
+## `evolution_level`
+
+- `3`: 246
+- `2`: 245
+- `4`: 213
+- `5`: 201
+- `6`: 18
+
+## `form`
+
+- `Rookie`: 218
+- `Champion`: 208
+- `Ultimate`: 197
+- `Mega`: 190
+- `Hybrid`: 89
+- `In-Training`: 66
+- `Armor Form`: 35
+- `Sup.`: 22
+- `Stnd.`: 19
+- `D-Reaper`: 14
+- `Ult.`: 11
+- `Appmon`: 8
+- `Eater`: 8
+- `God`: 6
+- `Unknown`: 2
+
+## `level`
+
+- `4`: 823
+- `3`: 722
+- `5`: 717
+- `6`: 703
+- `2`: 233
+- `7`: 95
+
+## `link_dp`
+
+- `2000`: 29
+- `3000`: 22
+- `4000`: 11
+
+## `play_cost`
+
+- `3`: 948
+- `4`: 529
+- `5`: 477
+- `7`: 443
+- `12`: 307
+- `6`: 297
+- `8`: 226
+- `11`: 180
+- `2`: 153
+- `13`: 121
+- `15`: 48
+- `10`: 40
+- `1`: 38
+- `9`: 32
+- `14`: 31
+- `0`: 20
+- `16`: 13
+- `20`: 3
+
+## `rarity`
+
+- `C`: 1431
+- `U`: 1031
+- `R`: 872
+- `SR`: 468
+- `SEC`: 74
+- `P`: 273
+- `UR`: 3
+
+## `series`
+
+- `Digimon Card Game`: 4153
+
+## `stage`
+
+- `Rookie`: 218
+- `Champion`: 208
+- `Ultimate`: 197
+- `Mega`: 191
+- `Hybrid`: 89
+- `In-Training`: 66
+- `Armor Form`: 35
+- `Sup.`: 22
+- `Stnd.`: 19
+- `D-Reaper`: 14
+- `Ult.`: 11
+- `Appmon`: 8
+- `Eater`: 8
+- `God`: 6
+- `Unknown`: 2
+
+## `type`
+
+- `Digimon`: 3076
+- `Option`: 511
+- `Tamer`: 323
+- `Digi-Egg`: 238
+- `Dual`: 5
