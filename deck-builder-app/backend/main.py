@@ -1,3 +1,8 @@
+"""FastAPI entry point for the Digimon deck builder backend.
+
+Main entry points: `app` for ASGI serving and `root()` for a simple health-style welcome response.
+"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -25,6 +30,7 @@ app.include_router(router)
 
 @app.get("/")
 def root() -> dict[str, str]:
+    """Return a simple message confirming that the API server is running."""
     return {"message": "Deck Builder App API is running."}
 
 

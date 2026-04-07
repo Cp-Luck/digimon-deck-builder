@@ -1,3 +1,8 @@
+"""Sort cached cards into per-set folders and JSON exports.
+
+Main function: `main()`, which groups cards by set code and writes the `by_set` output structure.
+"""
+
 from __future__ import annotations
 
 import json
@@ -19,6 +24,7 @@ CARD_ID_PATTERN = re.compile(r"^(?P<set>[A-Z]+\d*)-(?P<number>\d+)(?P<suffix>[A-
 
 
 def parse_card_id(card_id: str) -> tuple[str, int, str]:
+    """Split a card ID into set code, numeric order, and optional suffix."""
     normalized = card_id.strip().upper()
     match = CARD_ID_PATTERN.match(normalized)
     if match:
@@ -39,12 +45,14 @@ def parse_card_id(card_id: str) -> tuple[str, int, str]:
 
 
 def card_sort_key(card: dict[str, Any]) -> tuple[str, int, str, str]:
+    """Return a sort key that orders cards by set, number, suffix, and name."""
     card_id = get_card_identifier(card) or ""
     set_code, number, suffix = parse_card_id(card_id)
     return set_code, number, suffix, str(card.get("name") or "").lower()
 
 
 def group_cards_by_set(cards: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """Group cards into ordered lists keyed by their set folder code."""
     grouped_cards: dict[str, list[dict[str, Any]]] = defaultdict(list)
 
     for card in cards:
@@ -68,6 +76,7 @@ def write_grouped_cards(
     grouped_cards: dict[str, list[dict[str, Any]]],
     output_root: Path = SORTED_ROOT,
 ) -> list[dict[str, Any]]:
+    """Write grouped card exports to each set folder and return a summary index."""
     output_root.mkdir(parents=True, exist_ok=True)
     summary: list[dict[str, Any]] = []
 
@@ -97,6 +106,7 @@ def write_grouped_cards(
 
 
 def main() -> None:
+    """Run the full card-sorting export process and print a short summary."""
     cards = load_cards()
     grouped_cards = group_cards_by_set(cards)
     summary = write_grouped_cards(grouped_cards)

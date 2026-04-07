@@ -1,3 +1,8 @@
+"""Central path and API configuration for the backend.
+
+Main purpose: define reusable filesystem locations and remote service constants used across the app.
+"""
+
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent

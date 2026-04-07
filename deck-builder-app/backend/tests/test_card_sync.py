@@ -1,7 +1,13 @@
+"""Tests for the local card sync and deduplication workflow.
+
+Main coverage: deduping, missing-card fetches, and refreshing incomplete cached cards.
+"""
+
 import scripts.update_cards as updater
 
 
 def test_dedupe_cards_keeps_unique_cardnumbers():
+    """Verify duplicate card numbers collapse to the newest saved version."""
     from app.storage import dedupe_cards
 
     cards = [
@@ -18,6 +24,7 @@ def test_dedupe_cards_keeps_unique_cardnumbers():
 
 
 def test_update_cards_only_fetches_missing_numbers(monkeypatch):
+    """Ensure incremental sync requests only the card IDs that are not already cached."""
     existing_cards = [{"cardnumber": "BT1-001", "name": "Agumon"}]
     basic_cards = [
         {"cardnumber": "BT1-001"},
@@ -45,6 +52,7 @@ def test_update_cards_only_fetches_missing_numbers(monkeypatch):
 
 
 def test_update_cards_refreshes_incomplete_saved_cards(monkeypatch):
+    """Ensure incomplete cached cards are re-fetched to fill in missing data."""
     existing_cards = [{
         "id": "ST21-04",
         "name": "New Card",

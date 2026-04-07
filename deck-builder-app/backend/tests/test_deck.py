@@ -1,8 +1,14 @@
+"""Tests for deck persistence behavior.
+
+Main coverage: saving a deck and loading it back from storage.
+"""
+
 from app.deck import DeckManager
 from app.models import Card, Deck
 
 
 def test_save_and_get_deck(tmp_path):
+    """Ensure a saved deck can be retrieved and listed correctly."""
     manager = DeckManager(tmp_path / "saved_decks.json")
     deck = Deck(name="Blue Flare", cards=[Card(name="Greymon", count=4)])
 

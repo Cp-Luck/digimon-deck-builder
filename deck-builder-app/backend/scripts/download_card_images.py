@@ -1,3 +1,8 @@
+"""Download Digimon card images for faster local frontend display.
+
+Main function: `main()`, which downloads missing images into `backend/data/images`.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -20,12 +25,14 @@ CARD_IMAGE_PATTERN = re.compile(r"https://images\.digimoncard\.io/images/cards/[
 
 
 def build_remote_image_url(card_id: str | None) -> str | None:
+    """Build the default Digimon CDN image URL for a card ID."""
     if not card_id:
         return None
     return f"{REMOTE_IMAGE_BASE_URL}/{card_id.strip().upper()}.webp"
 
 
 def scrape_image_url_from_page(card: dict[str, Any], session: requests.Session) -> str | None:
+    """Scrape the card page for an image URL when the direct URL is unavailable."""
     pretty_url = str(card.get("pretty_url") or "").strip()
     if not pretty_url:
         return None
@@ -43,6 +50,7 @@ def download_single_card_image(
     session: requests.Session,
     force: bool = False,
 ) -> tuple[str | None, bool, str]:
+    """Download one card image and report the resulting status."""
     card_id = get_card_identifier(card)
     if card_id is None:
         return None, False, "missing card id"
@@ -81,6 +89,7 @@ def download_single_card_image(
 
 
 def download_card_images(limit: int | None = None, force: bool = False) -> tuple[int, int]:
+    """Download local images for all cards or just a limited subset."""
     cards = load_cards()
     selected_cards = cards[:limit] if limit else cards
     downloaded_count = 0
@@ -102,6 +111,7 @@ def download_card_images(limit: int | None = None, force: bool = False) -> tuple
 
 
 def main() -> None:
+    """Parse CLI arguments and run the local image download sync."""
     parser = argparse.ArgumentParser(description="Download Digimon card images for local use.")
     parser.add_argument("--limit", type=int, default=None, help="Only download the first N cards for testing.")
     parser.add_argument("--force", action="store_true", help="Re-download files even if they already exist.")

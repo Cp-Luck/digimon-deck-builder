@@ -1,3 +1,8 @@
+"""API routes and card search helpers for the deck builder backend.
+
+Main entry points: the `/api` router, `get_cards()`, and deck management endpoints.
+"""
+
 import time
 from typing import Any
 
@@ -15,6 +20,7 @@ current_deck_store = CurrentDeckStore()
 
 
 def get_all_cards_basic() -> list[dict[str, Any]]:
+    """Fetch the basic full card list from the remote Digimon API."""
     url = f"{BASE_URL}/getAllCards"
     params = {
         "sort": "name",
@@ -39,6 +45,7 @@ def get_all_cards_basic() -> list[dict[str, Any]]:
 
 
 def search_card_by_number(card_number: str) -> Any:
+    """Fetch full card details from the remote API using a card identifier."""
     url = f"{BASE_URL}/search"
     params = {"card": card_number}
     response = requests.get(url, params=params, timeout=30)
@@ -49,6 +56,7 @@ def search_card_by_number(card_number: str) -> Any:
 
 
 def _card_set_names(card: dict[str, Any]) -> list[str]:
+    """Return the card's set names as a normalized list of strings."""
     set_name = card.get("set_name")
     if isinstance(set_name, list):
         return [str(item) for item in set_name]
@@ -58,6 +66,7 @@ def _card_set_names(card: dict[str, Any]) -> list[str]:
 
 
 def build_remote_image_url(card_id: str | None) -> str | None:
+    """Build the fallback remote image URL for a card ID."""
     if card_id is None:
         return None
     normalized_card_id = card_id.strip().upper()
@@ -67,6 +76,7 @@ def build_remote_image_url(card_id: str | None) -> str | None:
 
 
 def get_local_image_url(card_id: str | None) -> str | None:
+    """Return the local image path when a downloaded card image exists."""
     if card_id is None:
         return None
     normalized_card_id = card_id.strip().upper()
@@ -78,6 +88,7 @@ def get_local_image_url(card_id: str | None) -> str | None:
 
 
 def resolve_card_image_url(card: dict[str, Any]) -> str | None:
+    """Choose the best image URL for a card, preferring local files when available."""
     card_id = get_card_identifier(card)
     return (
         get_local_image_url(card_id)
@@ -88,6 +99,7 @@ def resolve_card_image_url(card: dict[str, Any]) -> str | None:
 
 
 def _normalize_card(card: dict[str, Any]) -> dict[str, Any]:
+    """Convert raw card payloads into the frontend-friendly API shape."""
     return {
         "id": get_card_identifier(card),
         "name": card.get("name"),
@@ -105,15 +117,18 @@ def _normalize_card(card: dict[str, Any]) -> dict[str, Any]:
 
 
 def _parse_pack_filters(pack: str) -> list[str]:
+    """Split the set filter query string into uppercase set codes."""
     return [value.strip().upper() for value in pack.split(",") if value.strip()]
 
 
 def _card_set_code(card: dict[str, Any]) -> str:
+    """Extract the set code prefix from a card ID."""
     card_id = str(get_card_identifier(card) or "").strip().upper()
     return card_id.split("-", 1)[0] if card_id else ""
 
 
 def _set_code_sort_key(set_code: str) -> tuple[str, int, str]:
+    """Sort set codes by letter prefix and then numeric suffix."""
     prefix = "".join(character for character in set_code if character.isalpha())
     number = "".join(character for character in set_code if character.isdigit())
     return (prefix, int(number) if number else 0, set_code)
@@ -126,6 +141,7 @@ def _matches_card_filters(
     card_type: str = "",
     pack: str = "",
 ) -> bool:
+    """Return whether a card matches the current search and filter criteria."""
     normalized_name = str(card.get("name") or "").lower()
     normalized_id = str(get_card_identifier(card) or "").lower()
     normalized_type = str(card.get("type") or "").lower()
@@ -150,6 +166,7 @@ def _matches_card_filters(
 
 @router.get("/health")
 def health_check() -> dict[str, str]:
+    """Provide a lightweight API health response."""
     return {"status": "ok"}
 
 
@@ -161,6 +178,7 @@ def get_cards(
     pack: str = Query(default=""),
     limit: int = Query(default=60, ge=1, le=500),
 ) -> dict[str, Any]:
+    """Return locally cached cards filtered by the provided query parameters."""
     filtered_cards = [
         _normalize_card(card)
         for card in load_cards()
@@ -181,11 +199,13 @@ def search_cards(
     pack: str = Query(default=""),
     limit: int = Query(default=60, ge=1, le=500),
 ) -> dict[str, Any]:
+    """Alias route for card searching used by the frontend."""
     return get_cards(q=q, color=color, card_type=card_type, pack=pack, limit=limit)
 
 
 @router.get("/cards/sets")
 def get_card_sets() -> dict[str, list[str]]:
+    """Return the available set codes for the frontend set filter."""
     by_set_dir = CARDS_DIR / "by_set"
     set_codes = []
 
@@ -206,6 +226,7 @@ def get_card_sets() -> dict[str, list[str]]:
 
 @router.get("/cards/local")
 def get_local_cards() -> dict[str, Any]:
+    """Return the full locally cached card database and last update time."""
     return {
         "cards": load_cards(),
         "last_updated": get_last_updated(),
@@ -214,6 +235,7 @@ def get_local_cards() -> dict[str, Any]:
 
 @router.get("/cards/{card_id}")
 def get_card_detail(card_id: str) -> dict[str, Any]:
+    """Return the raw stored details for a specific card ID."""
     normalized_card_id = card_id.strip().upper()
     for card in load_cards():
         if isinstance(card, dict) and get_card_identifier(card) == normalized_card_id:
@@ -223,11 +245,13 @@ def get_card_detail(card_id: str) -> dict[str, Any]:
 
 @router.get("/deck")
 def get_current_deck() -> dict[str, Any]:
+    """Return the currently active deck shown in the frontend."""
     return current_deck_store.get_deck()
 
 
 @router.post("/deck/add")
 def add_card_to_deck(card: Card) -> dict[str, Any]:
+    """Add a card to the active deck and surface rule errors as HTTP 400 responses."""
     try:
         return current_deck_store.add_card(card)
     except ValueError as error:
@@ -236,16 +260,19 @@ def add_card_to_deck(card: Card) -> dict[str, Any]:
 
 @router.post("/deck/remove")
 def remove_card_from_deck(card: Card) -> dict[str, Any]:
+    """Remove a card or reduce its count in the active deck."""
     return current_deck_store.remove_card(card)
 
 
 @router.post("/deck/clear")
 def clear_current_deck() -> dict[str, Any]:
+    """Clear all cards from the active deck."""
     return current_deck_store.clear()
 
 
 @router.post("/deck/load")
 def load_current_deck(deck: Deck) -> dict[str, Any]:
+    """Load a saved deck into the active in-memory deck slot."""
     try:
         return current_deck_store.set_deck(deck)
     except ValueError as error:
@@ -254,11 +281,13 @@ def load_current_deck(deck: Deck) -> dict[str, Any]:
 
 @router.get("/decks")
 def get_decks() -> dict[str, list[dict[str, Any]]]:
+    """Return the list of all saved decks."""
     return {"decks": deck_manager.list_decks()}
 
 
 @router.get("/decks/{deck_name}")
 def get_deck(deck_name: str) -> dict[str, Any]:
+    """Fetch a single saved deck by name."""
     deck = deck_manager.get_deck(deck_name)
     if deck is None:
         raise HTTPException(status_code=404, detail="Deck not found")
@@ -267,6 +296,7 @@ def get_deck(deck_name: str) -> dict[str, Any]:
 
 @router.post("/decks")
 def create_or_update_deck(deck: Deck) -> dict[str, Any]:
+    """Create or update a saved deck after validating its contents."""
     try:
         saved_deck = deck_manager.save_deck(deck)
     except ValueError as error:

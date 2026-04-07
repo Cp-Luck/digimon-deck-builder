@@ -1,3 +1,8 @@
+"""Card cache storage helpers for loading, deduping, and timestamping saved card data.
+
+Main functions: `load_cards()`, `save_cards()`, `dedupe_cards()`, and `card_needs_refresh()`.
+"""
+
 from datetime import datetime, timezone
 from typing import Any
 
@@ -6,6 +11,7 @@ from config import CARD_FILE, LAST_UPDATED_FILE
 
 
 def get_card_identifier(card: dict[str, Any]) -> str | None:
+    """Return the best available card identifier from a card payload."""
     for key in ("id", "cardnumber", "card"):
         value = card.get(key)
         if value is not None and str(value).strip():
@@ -14,6 +20,7 @@ def get_card_identifier(card: dict[str, Any]) -> str | None:
 
 
 def get_card_dedupe_key(card: dict[str, Any]) -> str | None:
+    """Build a deduplication key that keeps card variants distinct when needed."""
     identifier = get_card_identifier(card)
     if identifier is None:
         return None
@@ -26,6 +33,7 @@ def get_card_dedupe_key(card: dict[str, Any]) -> str | None:
 
 
 def has_card_value(card: dict[str, Any], key: str) -> bool:
+    """Check whether a card field contains a meaningful non-empty value."""
     value = card.get(key)
     if value is None:
         return False
@@ -37,6 +45,7 @@ def has_card_value(card: dict[str, Any], key: str) -> bool:
 
 
 def card_needs_refresh(card: dict[str, Any]) -> bool:
+    """Identify cached cards that are incomplete and should be refreshed from the API."""
     if not isinstance(card, dict):
         return True
 
@@ -59,6 +68,7 @@ def card_needs_refresh(card: dict[str, Any]) -> bool:
 
 
 def dedupe_cards(cards: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Remove duplicate card entries while keeping the latest version of each card."""
     deduped_cards: list[dict[str, Any]] = []
     index_by_key: dict[str, int] = {}
 
@@ -81,10 +91,12 @@ def dedupe_cards(cards: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def save_cards(cards: list[dict[str, Any]]) -> None:
+    """Persist the deduplicated card cache to disk."""
     save_json(CARD_FILE, dedupe_cards(cards))
 
 
 def load_cards() -> list[dict[str, Any]]:
+    """Load the saved local card cache from disk."""
     cards = load_json(CARD_FILE, default_content=[])
     if not isinstance(cards, list):
         return []
@@ -92,6 +104,7 @@ def load_cards() -> list[dict[str, Any]]:
 
 
 def save_last_updated() -> None:
+    """Record the current UTC timestamp as the last successful sync time."""
     LAST_UPDATED_FILE.parent.mkdir(parents=True, exist_ok=True)
     LAST_UPDATED_FILE.write_text(
         datetime.now(timezone.utc).isoformat(),
@@ -100,6 +113,7 @@ def save_last_updated() -> None:
 
 
 def get_last_updated() -> str | None:
+    """Return the last card sync timestamp if one has been recorded."""
     LAST_UPDATED_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     if not LAST_UPDATED_FILE.exists():

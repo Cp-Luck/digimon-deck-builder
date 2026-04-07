@@ -1,3 +1,8 @@
+"""Deck persistence and rule validation for the deck builder.
+
+Main responsibilities: save decks, manage the current deck, and enforce copy limits and restriction rules.
+"""
+
 from pathlib import Path
 from typing import Any
 
@@ -14,18 +19,22 @@ RESTRICTED_LIST_DEFAULT = {
 
 
 def _card_key(card: dict[str, Any]) -> str:
+    """Build a stable key for comparing cards inside a deck."""
     return str(card.get("id") or card.get("name") or "").strip().lower()
 
 
 def _card_label(card: dict[str, Any]) -> str:
+    """Return a human-friendly card label for validation messages."""
     return str(card.get("id") or card.get("name") or "This card")
 
 
 def _normalize_restriction_key(value: Any) -> str:
+    """Normalize a restriction entry key so IDs compare consistently."""
     return str(value or "").strip().lower()
 
 
 def _normalize_count(value: Any) -> int:
+    """Clamp a requested card count to the allowed per-card range."""
     try:
         parsed = int(value)
     except (TypeError, ValueError):
@@ -34,6 +43,7 @@ def _normalize_count(value: Any) -> int:
 
 
 def load_restricted_list() -> dict[str, Any]:
+    """Load the editable local restricted-list configuration from disk."""
     data = load_json(RESTRICTED_LIST_FILE, default_content=RESTRICTED_LIST_DEFAULT)
     if not isinstance(data, dict):
         return dict(RESTRICTED_LIST_DEFAULT)
@@ -46,6 +56,7 @@ def load_restricted_list() -> dict[str, Any]:
 
 
 def _load_card_limits() -> dict[str, int]:
+    """Build the effective per-card limit map from the restriction file."""
     restricted_list = load_restricted_list()
     limits: dict[str, int] = {}
 
@@ -68,6 +79,7 @@ def _load_card_limits() -> dict[str, int]:
 
 
 def _load_banned_pairs() -> list[tuple[str, str]]:
+    """Normalize the configured banned-pair rules into comparable card ID pairs."""
     restricted_list = load_restricted_list()
     normalized_pairs: list[tuple[str, str]] = []
 
@@ -88,6 +100,7 @@ def _load_banned_pairs() -> list[tuple[str, str]]:
 
 
 def validate_deck_cards(cards: list[dict[str, Any]]) -> None:
+    """Validate a deck against copy limits, banned cards, and banned pairs."""
     card_limits = _load_card_limits()
     present_cards = {key: card for card in cards if (key := _card_key(card))}
 
@@ -111,6 +124,7 @@ def validate_deck_cards(cards: list[dict[str, Any]]) -> None:
 
 
 def _normalize_deck_cards(cards: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Merge duplicate entries, clamp counts, and validate the finished deck list."""
     normalized_cards: list[dict[str, Any]] = []
 
     for raw_card in cards:
@@ -138,13 +152,17 @@ def _normalize_deck_cards(cards: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 class DeckManager:
+    """Persist named decks to the JSON deck storage file."""
+
     def __init__(self, storage_path: Path = SAVED_DECKS_FILE):
         self.storage_path = storage_path
 
     def list_decks(self) -> list[dict[str, Any]]:
+        """Return all saved decks from storage."""
         return load_json(self.storage_path, default_content=[])
 
     def save_deck(self, deck: Deck) -> dict[str, Any]:
+        """Create or update a saved deck after normalizing and validating it."""
         decks = self.list_decks()
         deck_data = deck.model_dump()
         deck_data["cards"] = _normalize_deck_cards(deck_data.get("cards", []))
@@ -160,6 +178,7 @@ class DeckManager:
         return deck_data
 
     def get_deck(self, name: str) -> dict[str, Any] | None:
+        """Fetch a saved deck by name, ignoring case."""
         for deck in self.list_decks():
             if deck["name"].lower() == name.lower():
                 return deck
@@ -167,11 +186,14 @@ class DeckManager:
 
 
 class CurrentDeckStore:
+    """Manage the currently active in-memory deck shown in the UI."""
+
     def __init__(self, deck_name: str = "Current Deck"):
         self.deck_name = deck_name
         self.cards: list[dict[str, Any]] = []
 
     def get_deck(self) -> dict[str, Any]:
+        """Return the current deck payload and total card count."""
         return {
             "name": self.deck_name,
             "cards": self.cards,
@@ -179,11 +201,13 @@ class CurrentDeckStore:
         }
 
     def set_deck(self, deck: Deck) -> dict[str, Any]:
+        """Replace the current deck with a validated deck payload."""
         self.deck_name = deck.name or "Current Deck"
         self.cards = _normalize_deck_cards([card.model_dump() for card in deck.cards])
         return self.get_deck()
 
     def add_card(self, card: Card) -> dict[str, Any]:
+        """Add a card to the current deck while enforcing all deck rules."""
         card_data = card.model_dump()
         card_data["count"] = _normalize_count(card_data.get("count", 1))
         card_key = _card_key(card_data)
@@ -209,6 +233,7 @@ class CurrentDeckStore:
         return self.get_deck()
 
     def remove_card(self, card: Card) -> dict[str, Any]:
+        """Remove one or more copies of a card from the current deck."""
         card_data = card.model_dump()
         card_key = _card_key(card_data)
         remove_count = int(card_data.get("count", 1))
@@ -228,6 +253,7 @@ class CurrentDeckStore:
         return self.get_deck()
 
     def clear(self) -> dict[str, Any]:
+        """Reset the current deck back to an empty default state."""
         self.deck_name = "Current Deck"
         self.cards = []
         return self.get_deck()

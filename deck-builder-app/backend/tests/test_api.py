@@ -1,3 +1,8 @@
+"""API regression tests for card search, deck operations, and restriction handling.
+
+Main coverage: search filters, deck CRUD routes, image URL behavior, and deck validation rules.
+"""
+
 import json
 from pathlib import Path
 
@@ -12,6 +17,7 @@ client = TestClient(app)
 
 
 def test_health_check():
+    """Verify that the health endpoint responds successfully."""
     response = client.get("/api/health")
 
     assert response.status_code == 200
@@ -19,6 +25,7 @@ def test_health_check():
 
 
 def test_create_and_fetch_deck(tmp_path, monkeypatch):
+    """Ensure decks can be created and retrieved through the API."""
     monkeypatch.setattr(api_module, "deck_manager", DeckManager(tmp_path / "saved_decks.json"))
 
     payload = {
@@ -37,6 +44,7 @@ def test_create_and_fetch_deck(tmp_path, monkeypatch):
 
 
 def test_search_cards_from_local_cache(monkeypatch):
+    """Verify local search filters return the expected cached card results."""
     sample_cards = [
         {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "set_name": ["BT-01"]},
         {"id": "BT1-002", "name": "Gabumon", "type": "Digimon", "color": "Blue", "set_name": ["BT-01"]},
@@ -51,6 +59,7 @@ def test_search_cards_from_local_cache(monkeypatch):
 
 
 def test_search_cards_accepts_multiple_set_filters(monkeypatch):
+    """Ensure the set filter accepts multiple folder-based set codes at once."""
     sample_cards = [
         {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "set_name": ["BT-01"]},
         {"id": "EX1-001", "name": "Mugendramon", "type": "Digimon", "color": "Black", "set_name": ["EX-01"]},
@@ -66,6 +75,7 @@ def test_search_cards_accepts_multiple_set_filters(monkeypatch):
 
 
 def test_get_card_sets_returns_unique_sorted_options(tmp_path, monkeypatch):
+    """Ensure the set-options route returns sorted folder names from the export directory."""
     by_set_dir = tmp_path / "by_set"
     (by_set_dir / "EX1").mkdir(parents=True)
     (by_set_dir / "BT10").mkdir(parents=True)
@@ -81,6 +91,7 @@ def test_get_card_sets_returns_unique_sorted_options(tmp_path, monkeypatch):
 
 
 def test_add_and_remove_current_deck_card(monkeypatch):
+    """Verify that cards can be added to and removed from the active deck."""
     monkeypatch.setattr(api_module, "current_deck_store", CurrentDeckStore())
 
     add_response = client.post(
@@ -100,6 +111,7 @@ def test_add_and_remove_current_deck_card(monkeypatch):
 
 
 def test_add_card_to_current_deck_caps_count_at_four(monkeypatch):
+    """Ensure the active deck never allows more than four copies of one card."""
     monkeypatch.setattr(api_module, "current_deck_store", CurrentDeckStore())
 
     client.post(
@@ -116,6 +128,7 @@ def test_add_card_to_current_deck_caps_count_at_four(monkeypatch):
 
 
 def test_create_deck_rejects_more_than_four_copies():
+    """Ensure deck creation rejects requests that exceed the per-card copy limit."""
     response = client.post(
         "/api/decks",
         json={
@@ -130,6 +143,7 @@ def test_create_deck_rejects_more_than_four_copies():
 
 
 def test_add_card_to_current_deck_rejects_restricted_limit(tmp_path, monkeypatch):
+    """Ensure restriction-file copy limits are enforced during active deck updates."""
     restriction_file = tmp_path / "restricted_list.json"
     restriction_file.write_text(json.dumps({"card_limits": {"BT1-001": 1}}), encoding="utf-8")
     monkeypatch.setattr(deck_module, "RESTRICTED_LIST_FILE", restriction_file)
@@ -149,6 +163,7 @@ def test_add_card_to_current_deck_rejects_restricted_limit(tmp_path, monkeypatch
 
 
 def test_create_deck_rejects_banned_card_from_restricted_list(tmp_path, monkeypatch):
+    """Ensure saved decks cannot include cards listed as banned."""
     restriction_file = tmp_path / "restricted_list.json"
     restriction_file.write_text(json.dumps({"banned_cards": ["BT1-001"]}), encoding="utf-8")
     monkeypatch.setattr(deck_module, "RESTRICTED_LIST_FILE", restriction_file)
@@ -169,6 +184,7 @@ def test_create_deck_rejects_banned_card_from_restricted_list(tmp_path, monkeypa
 
 
 def test_create_deck_rejects_banned_pair_from_restricted_list(tmp_path, monkeypatch):
+    """Ensure decks are rejected when they contain both sides of a banned pair."""
     restriction_file = tmp_path / "restricted_list.json"
     restriction_file.write_text(
         json.dumps({"banned_pairs": [{"a": "BT1-001", "b": "BT1-002"}]}),
@@ -193,6 +209,7 @@ def test_create_deck_rejects_banned_pair_from_restricted_list(tmp_path, monkeypa
 
 
 def test_search_cards_uses_remote_image_fallback(monkeypatch):
+    """Verify that card search falls back to the remote CDN image URL when needed."""
     sample_cards = [
         {
             "id": "BT1-010",
@@ -212,6 +229,7 @@ def test_search_cards_uses_remote_image_fallback(monkeypatch):
 
 
 def test_normalize_card_prefers_local_image_when_available(monkeypatch):
+    """Verify that locally downloaded images take priority over remote URLs."""
     monkeypatch.setattr(api_module, "get_local_image_url", lambda card_id: f"/images/{card_id}.webp")
 
     normalized = api_module._normalize_card(

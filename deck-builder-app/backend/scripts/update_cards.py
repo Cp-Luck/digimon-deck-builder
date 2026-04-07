@@ -1,3 +1,8 @@
+"""Incrementally sync Digimon card data into the local JSON cache.
+
+Main function: `update_cards()`, which fetches missing or incomplete cards and saves progress along the way.
+"""
+
 from pathlib import Path
 import sys
 import time
@@ -12,6 +17,7 @@ from app.storage import card_needs_refresh, dedupe_cards, get_card_identifier, l
 
 
 def fetch_card_details(card_id: str, retries: int = 3, retry_delay: float = 2.0) -> list[dict[str, Any]]:
+    """Fetch card details with retry handling for transient API failures."""
     last_error: Exception | None = None
 
     for attempt in range(1, retries + 1):
@@ -32,6 +38,7 @@ def fetch_card_details(card_id: str, retries: int = 3, retry_delay: float = 2.0)
 
 
 def update_cards() -> None:
+    """Update the local card cache by fetching only missing or incomplete cards."""
     basic_cards = get_all_cards_basic()
     existing_cards = dedupe_cards(load_cards())
     existing_ids = {
