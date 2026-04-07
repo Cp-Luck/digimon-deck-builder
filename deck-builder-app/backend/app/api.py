@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 from app.deck import CurrentDeckStore, DeckManager
 from app.models import Card, Deck
 from app.storage import get_card_identifier, get_last_updated, load_cards
-from config import BASE_URL, REQUEST_DELAY
+from config import BASE_URL, CARDS_DIR, IMAGES_DIR, REMOTE_IMAGE_BASE_URL, REQUEST_DELAY
 
 router = APIRouter(prefix="/api", tags=["decks", "cards"])
 deck_manager = DeckManager()
@@ -57,6 +57,36 @@ def _card_set_names(card: dict[str, Any]) -> list[str]:
     return []
 
 
+def build_remote_image_url(card_id: str | None) -> str | None:
+    if card_id is None:
+        return None
+    normalized_card_id = card_id.strip().upper()
+    if not normalized_card_id:
+        return None
+    return f"{REMOTE_IMAGE_BASE_URL}/{normalized_card_id}.webp"
+
+
+def get_local_image_url(card_id: str | None) -> str | None:
+    if card_id is None:
+        return None
+    normalized_card_id = card_id.strip().upper()
+    if not normalized_card_id:
+        return None
+
+    image_path = IMAGES_DIR / f"{normalized_card_id}.webp"
+    return f"/images/{image_path.name}" if image_path.exists() else None
+
+
+def resolve_card_image_url(card: dict[str, Any]) -> str | None:
+    card_id = get_card_identifier(card)
+    return (
+        get_local_image_url(card_id)
+        or card.get("image_url")
+        or card.get("img_url")
+        or build_remote_image_url(card_id)
+    )
+
+
 def _normalize_card(card: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": get_card_identifier(card),
@@ -67,11 +97,26 @@ def _normalize_card(card: dict[str, Any]) -> dict[str, Any]:
         "play_cost": card.get("play_cost"),
         "rarity": card.get("rarity"),
         "set_name": _card_set_names(card),
-        "image_url": card.get("image_url") or card.get("img_url"),
+        "image_url": resolve_card_image_url(card),
         "pretty_url": card.get("pretty_url"),
         "main_effect": card.get("main_effect"),
         "source_effect": card.get("source_effect"),
     }
+
+
+def _parse_pack_filters(pack: str) -> list[str]:
+    return [value.strip().upper() for value in pack.split(",") if value.strip()]
+
+
+def _card_set_code(card: dict[str, Any]) -> str:
+    card_id = str(get_card_identifier(card) or "").strip().upper()
+    return card_id.split("-", 1)[0] if card_id else ""
+
+
+def _set_code_sort_key(set_code: str) -> tuple[str, int, str]:
+    prefix = "".join(character for character in set_code if character.isalpha())
+    number = "".join(character for character in set_code if character.isdigit())
+    return (prefix, int(number) if number else 0, set_code)
 
 
 def _matches_card_filters(
@@ -86,17 +131,19 @@ def _matches_card_filters(
     normalized_type = str(card.get("type") or "").lower()
     normalized_color = str(card.get("color") or "").lower()
     normalized_sets = " ".join(_card_set_names(card)).lower()
+    normalized_set_code = _card_set_code(card).lower()
     normalized_query = q.strip().lower()
+    selected_packs = _parse_pack_filters(pack)
 
     if normalized_query and normalized_query not in " ".join(
-        [normalized_name, normalized_id, normalized_type, normalized_sets]
+        [normalized_name, normalized_id, normalized_type, normalized_sets, normalized_set_code]
     ):
         return False
     if color and normalized_color != color.strip().lower():
         return False
     if card_type and normalized_type != card_type.strip().lower():
         return False
-    if pack and pack.strip().lower() not in normalized_sets:
+    if selected_packs and normalized_set_code.upper() not in selected_packs:
         return False
     return True
 
@@ -135,6 +182,26 @@ def search_cards(
     limit: int = Query(default=60, ge=1, le=500),
 ) -> dict[str, Any]:
     return get_cards(q=q, color=color, card_type=card_type, pack=pack, limit=limit)
+
+
+@router.get("/cards/sets")
+def get_card_sets() -> dict[str, list[str]]:
+    by_set_dir = CARDS_DIR / "by_set"
+    set_codes = []
+
+    if by_set_dir.exists():
+        set_codes = [entry.name for entry in by_set_dir.iterdir() if entry.is_dir()]
+
+    if not set_codes:
+        set_codes = list(
+            {
+                _card_set_code(card)
+                for card in load_cards()
+                if isinstance(card, dict) and _card_set_code(card)
+            }
+        )
+
+    return {"sets": sorted(set_codes, key=_set_code_sort_key)}
 
 
 @router.get("/cards/local")

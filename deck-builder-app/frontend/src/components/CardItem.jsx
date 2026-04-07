@@ -1,11 +1,24 @@
+import { useMemo, useState } from 'react'
+
 export default function CardItem({ card, onAddCard }) {
   const setLabel = Array.isArray(card.set_name) ? card.set_name[0] : card.set_name
+  const [imageFailed, setImageFailed] = useState(false)
+
+  const imageSrc = useMemo(() => {
+    if (!card.image_url) {
+      return null
+    }
+    if (card.image_url.startsWith('/')) {
+      return card.image_url
+    }
+    return card.image_url
+  }, [card.image_url])
 
   return (
     <article className="panel card-item">
       <div className="card-art">
-        {card.image_url ? (
-          <img src={card.image_url} alt={card.name} loading="lazy" />
+        {imageSrc && !imageFailed ? (
+          <img src={imageSrc} alt={card.name} loading="lazy" onError={() => setImageFailed(true)} />
         ) : (
           <div>
             <div className="card-id">{card.id || 'Unknown ID'}</div>

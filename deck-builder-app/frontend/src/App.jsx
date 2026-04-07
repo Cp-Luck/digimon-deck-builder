@@ -10,12 +10,64 @@ const defaultFilters = {
   q: '',
   color: '',
   card_type: '',
-  pack: '',
+  pack: [],
+}
+
+function parseCardId(cardId) {
+  const normalized = String(cardId || '').trim().toUpperCase()
+  const match = normalized.match(/^(?<prefix>[A-Z]+)(?<setNumber>\d*)-(?<cardNumber>\d+)(?<suffix>[A-Z]*)$/)
+
+  if (match?.groups) {
+    return {
+      prefix: match.groups.prefix || '',
+      setNumber: Number(match.groups.setNumber || 0),
+      cardNumber: Number(match.groups.cardNumber || 0),
+      suffix: match.groups.suffix || '',
+      raw: normalized,
+    }
+  }
+
+  const [prefix = '', remainder = ''] = normalized.split('-', 2)
+  const cardNumber = Number((remainder.match(/\d+/) || ['0'])[0])
+  const suffix = (remainder.match(/[A-Z]+$/) || [''])[0]
+
+  return {
+    prefix,
+    setNumber: Number((prefix.match(/\d+/) || ['0'])[0]),
+    cardNumber,
+    suffix,
+    raw: normalized,
+  }
+}
+
+function compareCardsById(leftCard, rightCard) {
+  const left = parseCardId(leftCard?.id)
+  const right = parseCardId(rightCard?.id)
+
+  return (
+    left.prefix.localeCompare(right.prefix) ||
+    left.setNumber - right.setNumber ||
+    left.cardNumber - right.cardNumber ||
+    left.suffix.localeCompare(right.suffix) ||
+    String(leftCard?.name || '').localeCompare(String(rightCard?.name || ''))
+  )
+}
+
+function sortCardsById(cards = []) {
+  return [...cards].sort(compareCardsById)
+}
+
+function normalizeDeckOrder(deckData) {
+  return {
+    ...deckData,
+    cards: sortCardsById(deckData?.cards || []),
+  }
 }
 
 function App() {
   const [filters, setFilters] = useState(defaultFilters)
   const [cards, setCards] = useState([])
+  const [setOptions, setSetOptions] = useState([])
   const [deck, setDeck] = useState({ name: 'Current Deck', cards: [], total_cards: 0 })
   const [savedDecks, setSavedDecks] = useState([])
   const [deckName, setDeckName] = useState('My Digimon Deck')
@@ -25,6 +77,13 @@ function App() {
   const searchParams = useMemo(() => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        if (value.length) {
+          params.set(key, value.join(','))
+        }
+        return
+      }
+
       if (value) {
         params.set(key, value)
       }
@@ -40,6 +99,7 @@ function App() {
   useEffect(() => {
     fetchCurrentDeck()
     fetchSavedDecks()
+    fetchSetOptions()
   }, [])
 
   async function fetchCards() {
@@ -47,7 +107,7 @@ function App() {
     try {
       const response = await fetch(`${API_BASE}/cards/search?${searchParams}`)
       const data = await response.json()
-      setCards(data.cards || [])
+      setCards(sortCardsById(data.cards || []))
       setStatus(`Showing ${data.count ?? 0} cards from the local database.`)
     } catch (error) {
       setStatus(`Could not load cards: ${error.message}`)
@@ -60,9 +120,19 @@ function App() {
     try {
       const response = await fetch(`${API_BASE}/deck`)
       const data = await response.json()
-      setDeck(data)
+      setDeck(normalizeDeckOrder(data))
     } catch (error) {
       setStatus(`Could not load current deck: ${error.message}`)
+    }
+  }
+
+  async function fetchSetOptions() {
+    try {
+      const response = await fetch(`${API_BASE}/cards/sets`)
+      const data = await response.json()
+      setSetOptions(data.sets || [])
+    } catch {
+      setSetOptions([])
     }
   }
 
@@ -94,7 +164,7 @@ function App() {
       body: JSON.stringify(payload),
     })
     const data = await response.json()
-    setDeck(data)
+    setDeck(normalizeDeckOrder(data))
   }
 
   async function removeCard(card) {
@@ -111,13 +181,13 @@ function App() {
       body: JSON.stringify(payload),
     })
     const data = await response.json()
-    setDeck(data)
+    setDeck(normalizeDeckOrder(data))
   }
 
   async function clearDeck() {
     const response = await fetch(`${API_BASE}/deck/clear`, { method: 'POST' })
     const data = await response.json()
-    setDeck(data)
+    setDeck(normalizeDeckOrder(data))
   }
 
   async function saveDeck() {
@@ -151,7 +221,7 @@ function App() {
     })
     const loadedDeck = await loadResponse.json()
 
-    setDeck(loadedDeck)
+    setDeck(normalizeDeckOrder(loadedDeck))
     setDeckName(data.name || name)
     setStatus(`Loaded saved deck: ${name}`)
   }
@@ -176,7 +246,7 @@ function App() {
       <p className="status-banner">{status}</p>
 
       <main className="layout-grid">
-        <FilterPanel filters={filters} onChange={setFilters} />
+        <FilterPanel filters={filters} onChange={setFilters} setOptions={setOptions} />
         <CardGrid cards={cards} loading={loadingCards} onAddCard={addCard} />
         <DeckPanel
           deck={deck}

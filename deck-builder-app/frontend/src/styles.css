@@ -138,6 +138,50 @@ button {
   color: #cbd5e1;
 }
 
+.filter-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.filter-clear-button {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #334155;
+  color: white;
+  font-size: 0.8rem;
+}
+
+.checkbox-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #111827;
+}
+
+.checkbox-option {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.checkbox-option input {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-option span {
+  color: #e5eefb;
+}
+
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
