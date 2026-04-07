@@ -1,0 +1,245 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #e5eefb;
+  background: #0f172a;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.2), transparent 0, transparent 50%),
+    #0f172a;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #38bdf8;
+  font-size: 0.8rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.hero-text {
+  margin: 8px 0 0;
+  color: #cbd5e1;
+}
+
+.status-banner {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #bfdbfe;
+}
+
+.layout-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+}
+
+.panel {
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.panel h2,
+.panel h3 {
+  margin-top: 0;
+}
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  width: min(440px, 100%);
+}
+
+.search-bar input,
+.filter-panel input,
+.filter-panel select,
+.deck-name-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #111827;
+  color: #e5eefb;
+}
+
+.search-bar button,
+.card-item button,
+.deck-actions button,
+.saved-deck button {
+  padding: 10px 12px;
+  background: #2563eb;
+  color: white;
+}
+
+.secondary-button {
+  background: #334155 !important;
+}
+
+.filter-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.filter-panel label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.95rem;
+  color: #cbd5e1;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.card-item {
+  display: grid;
+  gap: 12px;
+}
+
+.card-art {
+  min-height: 170px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.45), rgba(14, 116, 144, 0.45));
+  color: white;
+  text-align: center;
+  padding: 12px;
+  font-weight: 600;
+}
+
+.card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.card-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.card-meta p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.92rem;
+}
+
+.card-id {
+  color: #7dd3fc;
+  font-weight: 600;
+}
+
+.card-empty {
+  color: #94a3b8;
+}
+
+.deck-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #cbd5e1;
+}
+
+.deck-actions {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.deck-list {
+  display: grid;
+  gap: 10px;
+}
+
+.deck-entry,
+.saved-deck {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.75);
+}
+
+.deck-entry p,
+.saved-deck p {
+  margin: 0;
+}
+
+.saved-decks {
+  margin-top: 20px;
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 1100px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar {
+    width: 100%;
+  }
+}
