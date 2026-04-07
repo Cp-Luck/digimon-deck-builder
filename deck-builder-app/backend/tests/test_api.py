@@ -74,6 +74,44 @@ def test_search_cards_accepts_multiple_set_filters(monkeypatch):
     assert {card["id"] for card in response.json()["cards"]} == {"BT1-001", "EX1-001"}
 
 
+def test_search_cards_accepts_multiple_digi_type_values(monkeypatch):
+    """Ensure one digi type filter can match any selected value across all digi type fields."""
+    sample_cards = [
+        {
+            "id": "BT1-001",
+            "name": "Agumon",
+            "type": "Digimon",
+            "color": "Red",
+            "digi_type": "Reptile",
+            "digi_type2": "Dragonkin",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-002",
+            "name": "Wizardmon",
+            "type": "Digimon",
+            "color": "Purple",
+            "digi_type": "Wizard",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-003",
+            "name": "Patamon",
+            "type": "Digimon",
+            "color": "Yellow",
+            "digi_type": "Mammal",
+            "set_name": ["BT-01"],
+        },
+    ]
+    monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
+
+    response = client.get("/api/cards/search", params={"digi_type": "Dragonkin,Wizard"})
+
+    assert response.status_code == 200
+    assert response.json()["count"] == 2
+    assert {card["id"] for card in response.json()["cards"]} == {"BT1-001", "BT1-002"}
+
+
 def test_search_cards_accepts_advanced_field_filters(monkeypatch):
     """Ensure advanced numeric and text-based field filters are applied by the card search route."""
     sample_cards = [
@@ -204,6 +242,30 @@ def test_get_card_filter_options_returns_summary_data(tmp_path, monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["filters"] == {"rarity": {"C": 10, "R": 8}, "digi_type": {"Dragon": 4}}
+
+
+def test_search_cards_exposes_restriction_limits(tmp_path, monkeypatch):
+    """Ensure restricted cards include their allowed copy count for frontend badges."""
+    restriction_file = tmp_path / "restricted_list.json"
+    restriction_file.write_text(
+        json.dumps({"card_limits": {"BT1-001": 1}, "banned_cards": ["BT1-002"]}),
+        encoding="utf-8",
+    )
+    sample_cards = [
+        {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "set_name": ["BT-01"]},
+        {"id": "BT1-002", "name": "Gabumon", "type": "Digimon", "color": "Blue", "set_name": ["BT-01"]},
+        {"id": "BT1-003", "name": "Patamon", "type": "Digimon", "color": "Yellow", "set_name": ["BT-01"]},
+    ]
+    monkeypatch.setattr(deck_module, "RESTRICTED_LIST_FILE", restriction_file)
+    monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
+
+    response = client.get("/api/cards/search")
+
+    assert response.status_code == 200
+    cards_by_id = {card["id"]: card for card in response.json()["cards"]}
+    assert cards_by_id["BT1-001"]["restriction_limit"] == 1
+    assert cards_by_id["BT1-002"]["restriction_limit"] == 0
+    assert cards_by_id["BT1-003"]["restriction_limit"] is None
 
 
 def test_add_and_remove_current_deck_card(monkeypatch):

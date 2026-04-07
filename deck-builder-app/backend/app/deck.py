@@ -78,6 +78,26 @@ def _load_card_limits() -> dict[str, int]:
     return limits
 
 
+def get_card_limits() -> dict[str, int]:
+    """Return the effective restricted-card limit map for API and UI consumers."""
+    return _load_card_limits()
+
+
+def get_card_limit(card_or_value: dict[str, Any] | Any, card_limits: dict[str, int] | None = None) -> int | None:
+    """Return the allowed copy count for a specific restricted card, if one exists."""
+    if isinstance(card_or_value, dict):
+        lookup_value = card_or_value.get("id") or card_or_value.get("name")
+    else:
+        lookup_value = card_or_value
+
+    normalized_key = _normalize_restriction_key(lookup_value)
+    if not normalized_key:
+        return None
+
+    limits = card_limits if card_limits is not None else _load_card_limits()
+    return limits.get(normalized_key)
+
+
 def _load_banned_pairs() -> list[tuple[str, str]]:
     """Normalize the configured banned-pair rules into comparable card ID pairs."""
     restricted_list = load_restricted_list()

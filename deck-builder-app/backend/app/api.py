@@ -10,7 +10,7 @@ from typing import Any
 import requests
 from fastapi import APIRouter, HTTPException, Query
 
-from app.deck import CurrentDeckStore, DeckManager
+from app.deck import CurrentDeckStore, DeckManager, get_card_limit, get_card_limits
 from app.models import Card, Deck
 from app.storage import get_card_identifier, get_last_updated, load_cards
 from config import BASE_URL, CARDS_DIR, IMAGES_DIR, REMOTE_IMAGE_BASE_URL, REQUEST_DELAY
@@ -99,7 +99,7 @@ def resolve_card_image_url(card: dict[str, Any]) -> str | None:
     )
 
 
-def _normalize_card(card: dict[str, Any]) -> dict[str, Any]:
+def _normalize_card(card: dict[str, Any], card_limits: dict[str, int] | None = None) -> dict[str, Any]:
     """Convert raw card payloads into the frontend-friendly API shape."""
     return {
         "id": get_card_identifier(card),
@@ -121,6 +121,7 @@ def _normalize_card(card: dict[str, Any]) -> dict[str, Any]:
         "dp": card.get("dp"),
         "attribute": card.get("attribute"),
         "rarity": card.get("rarity"),
+        "restriction_limit": get_card_limit(card, card_limits),
         "stage": card.get("stage"),
         "artist": card.get("artist"),
         "link_requirements": card.get("link_requirements"),
@@ -177,6 +178,7 @@ EXACT_MATCH_FILTER_FIELDS = {
     "link_dp",
     "rarity",
 }
+DIGI_TYPE_FIELDS = ("digi_type", "digi_type2", "digi_type3", "digi_type4")
 
 
 def _normalize_filter_value(field_name: str, value: Any) -> str:
@@ -191,6 +193,22 @@ def _matches_field_filter(card: dict[str, Any], field_name: str, expected_value:
     """Check whether a single card field matches a requested filter value."""
     if not expected_value:
         return True
+
+    if field_name == "digi_type":
+        selected_values = [
+            _normalize_filter_value(field_name, value)
+            for value in str(expected_value).split(",")
+            if str(value).strip()
+        ]
+        if not selected_values:
+            return True
+
+        actual_values = [
+            _normalize_filter_value(field_name, card.get(digi_field))
+            for digi_field in DIGI_TYPE_FIELDS
+            if card.get(digi_field) not in (None, "")
+        ]
+        return any(selected_value == actual_value for selected_value in selected_values for actual_value in actual_values)
 
     raw_value = card.get(field_name)
     if raw_value is None:
@@ -307,8 +325,9 @@ def get_cards(
         "link_requirements": link_requirements,
         "link_dp": link_dp,
     }
+    card_limits = get_card_limits()
     filtered_cards = [
-        _normalize_card(card)
+        _normalize_card(card, card_limits)
         for card in load_cards()
         if isinstance(card, dict)
         and _matches_card_filters(

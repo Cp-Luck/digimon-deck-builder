@@ -202,6 +202,15 @@ button {
   gap: 10px;
 }
 
+.advanced-filter-section {
+  display: grid;
+  gap: 8px;
+}
+
+.checkbox-list-compact {
+  max-height: 180px;
+}
+
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -214,6 +223,8 @@ button {
 }
 
 .card-art {
+  position: relative;
+  overflow: hidden;
   min-height: 170px;
   display: grid;
   place-items: center;
@@ -223,6 +234,25 @@ button {
   text-align: center;
   padding: 12px;
   font-weight: 600;
+}
+
+.restriction-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .card-art img {

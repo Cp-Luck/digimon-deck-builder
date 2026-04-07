@@ -11,10 +11,6 @@ const SUMMARY_FILTERS = [
   { key: 'evolution_level', label: 'Evolution Level', summaryKey: 'evolution_level', inputType: 'number', step: 1 },
   { key: 'dp', label: 'DP', summaryKey: 'dp', inputType: 'number', step: 1000 },
   { key: 'link_dp', label: 'Link DP', summaryKey: 'link_dp', inputType: 'number', step: 1000 },
-  { key: 'digi_type', label: 'Digi Type', summaryKey: 'digi_type' },
-  { key: 'digi_type2', label: 'Digi Type 2', summaryKey: 'digi_type' },
-  { key: 'digi_type3', label: 'Digi Type 3', summaryKey: 'digi_type' },
-  { key: 'digi_type4', label: 'Digi Type 4', summaryKey: 'digi_type' },
   { key: 'form', label: 'Form', summaryKey: 'form' },
   { key: 'attribute', label: 'Attribute', summaryKey: 'attribute' },
   { key: 'rarity', label: 'Rarity', summaryKey: 'rarity' },
@@ -82,6 +78,17 @@ export default function FilterPanel({ filters, onChange, setOptions = [], fieldO
     onChange((current) => ({ ...current, [key]: value }))
   }
 
+  function toggleMultiValue(key, optionValue) {
+    onChange((current) => {
+      const currentValues = Array.isArray(current[key]) ? current[key] : []
+      const nextValues = currentValues.includes(optionValue)
+        ? currentValues.filter((value) => value !== optionValue)
+        : [...currentValues, optionValue]
+
+      return { ...current, [key]: nextValues }
+    })
+  }
+
   function togglePackOption(setName) {
     onChange((current) => {
       const currentPacks = Array.isArray(current.pack) ? current.pack : []
@@ -96,6 +103,7 @@ export default function FilterPanel({ filters, onChange, setOptions = [], fieldO
   const colorOptions = getSelectOptions(fieldOptions, 'color', COLOR_OPTIONS)
   const typeOptions = getSelectOptions(fieldOptions, 'type', TYPE_OPTIONS)
   const evolutionColorOptions = getSelectOptions(fieldOptions, 'evolution_color', COLOR_OPTIONS)
+  const digiTypeOptions = getSelectOptions(fieldOptions, 'digi_type')
 
   return (
     <aside className="panel">
@@ -164,6 +172,34 @@ export default function FilterPanel({ filters, onChange, setOptions = [], fieldO
         <details className="advanced-filters" open>
           <summary>Advanced Filters</summary>
           <div className="advanced-filter-grid">
+            <div className="advanced-filter-section">
+              <div className="filter-section-header">
+                <span>Digi Type</span>
+                {filters.digi_type?.length ? (
+                  <button type="button" className="filter-clear-button" onClick={() => updateField('digi_type', [])}>
+                    Clear
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="checkbox-list checkbox-list-compact">
+                {digiTypeOptions.length ? (
+                  digiTypeOptions.map((option) => (
+                    <label key={`digi-type-${option.value}`} className="checkbox-option">
+                      <input
+                        type="checkbox"
+                        checked={filters.digi_type?.includes(option.value) || false}
+                        onChange={() => toggleMultiValue('digi_type', option.value)}
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="card-empty">No digi type options loaded yet.</p>
+                )}
+              </div>
+            </div>
+
             {SUMMARY_FILTERS.map((field) => {
               const options = getSelectOptions(fieldOptions, field.summaryKey)
 
