@@ -1,8 +1,9 @@
 """Tests for the local card sync and deduplication workflow.
 
-Main coverage: deduping, missing-card fetches, and refreshing incomplete cached cards.
+Main coverage: deduping, missing-card fetches, refreshing incomplete cached cards, and the combined sync-and-sort flow.
 """
 
+import scripts.sync_and_sort_cards as sync_and_sort
 import scripts.update_cards as updater
 
 
@@ -95,3 +96,15 @@ def test_update_cards_refreshes_incomplete_saved_cards(monkeypatch):
     assert len(saved_payload["cards"]) == 1
     assert saved_payload["cards"][0]["rarity"] == "R"
     assert saved_payload["cards"][0]["play_cost"] == 3
+
+
+def test_sync_and_sort_cards_runs_update_then_sort(monkeypatch):
+    """Ensure the combined sync script runs card updating before set sorting."""
+    calls: list[str] = []
+
+    monkeypatch.setattr(sync_and_sort, "update_cards", lambda: calls.append("update"))
+    monkeypatch.setattr(sync_and_sort, "sort_cards_by_set", lambda: calls.append("sort"))
+
+    sync_and_sort.sync_and_sort_cards()
+
+    assert calls == ["update", "sort"]
