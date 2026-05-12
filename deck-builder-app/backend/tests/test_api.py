@@ -74,6 +74,38 @@ def test_search_cards_accepts_multiple_set_filters(monkeypatch):
     assert {card["id"] for card in response.json()["cards"]} == {"BT1-001", "EX1-001"}
 
 
+def test_search_cards_accepts_multiple_type_values(monkeypatch):
+    """Ensure the type filter can match any selected value from a checkbox dropdown."""
+    sample_cards = [
+        {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "set_name": ["BT-01"]},
+        {"id": "BT1-090", "name": "Gaia Force", "type": "Option", "color": "Red", "set_name": ["BT-01"]},
+        {"id": "BT1-087", "name": "Tai Kamiya", "type": "Tamer", "color": "Red", "set_name": ["BT-01"]},
+    ]
+    monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
+
+    response = client.get("/api/cards/search", params={"card_type": "Digimon,Option"})
+
+    assert response.status_code == 200
+    assert response.json()["count"] == 2
+    assert {card["id"] for card in response.json()["cards"]} == {"BT1-001", "BT1-090"}
+
+
+def test_search_cards_requires_all_selected_colors_across_color_and_color2(monkeypatch):
+    """Ensure multi-color filtering uses AND matching across primary and secondary colors."""
+    sample_cards = [
+        {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "color2": None, "set_name": ["BT-01"]},
+        {"id": "BT1-002", "name": "Omnimon Alter-S", "type": "Digimon", "color": "Red", "color2": "Blue", "set_name": ["BT-01"]},
+        {"id": "BT1-003", "name": "Imperialdramon", "type": "Digimon", "color": "Green", "color2": "Blue", "set_name": ["BT-01"]},
+    ]
+    monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
+
+    response = client.get("/api/cards/search", params={"color": "Red,Blue"})
+
+    assert response.status_code == 200
+    assert response.json()["count"] == 1
+    assert {card["id"] for card in response.json()["cards"]} == {"BT1-002"}
+
+
 def test_search_cards_accepts_multiple_digi_type_values(monkeypatch):
     """Ensure one digi type filter can match any selected value across all digi type fields."""
     sample_cards = [

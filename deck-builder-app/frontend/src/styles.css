@@ -90,6 +90,13 @@ button {
   backdrop-filter: blur(10px);
 }
 
+.deck-panel {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
 .panel h2,
 .panel h3 {
   margin-top: 0;
@@ -155,6 +162,39 @@ button {
   font-size: 0.8rem;
 }
 
+.filter-dropdown {
+  display: grid;
+  gap: 8px;
+}
+
+.filter-dropdown details {
+  display: grid;
+  gap: 6px;
+}
+
+.filter-dropdown-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #111827;
+  color: #e5eefb;
+  cursor: pointer;
+  list-style: none;
+}
+
+.filter-dropdown-summary::-webkit-details-marker {
+  display: none;
+}
+
+.filter-dropdown-caret {
+  color: #93c5fd;
+  font-size: 0.85rem;
+}
+
 .checkbox-list {
   max-height: 220px;
   overflow-y: auto;
@@ -164,6 +204,16 @@ button {
   border-radius: 10px;
   border: 1px solid #334155;
   background: #111827;
+}
+
+.checkbox-list-inline {
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  max-height: none;
+  overflow: visible;
+}
+
+.filter-dropdown-list {
+  margin-top: 0;
 }
 
 .checkbox-option {
@@ -211,20 +261,55 @@ button {
   max-height: 180px;
 }
 
+.card-grid-panel {
+  min-width: 0;
+}
+
+.card-grid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.card-grid-header h2 {
+  margin: 0;
+}
+
+.card-zoom-control {
+  display: grid;
+  gap: 6px;
+  min-width: 180px;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.card-zoom-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.card-zoom-range {
+  width: 100%;
+  accent-color: #38bdf8;
+}
+
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width, 220px), 1fr));
+  gap: var(--card-gap, 16px);
 }
 
 .card-item {
   display: grid;
-  gap: 12px;
+  gap: var(--card-item-gap, 12px);
 }
 
 .card-actions {
   display: grid;
-  gap: 8px;
+  gap: max(6px, calc(var(--card-item-gap, 12px) - 4px));
 }
 
 .card-art-button {
@@ -241,7 +326,7 @@ button {
 .card-art {
   position: relative;
   overflow: hidden;
-  min-height: 170px;
+  min-height: var(--card-art-min-height, 170px);
   display: grid;
   place-items: center;
   border-radius: 12px;
@@ -323,6 +408,25 @@ button {
   color: #cbd5e1;
 }
 
+.deck-cost-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  background: rgba(37, 99, 235, 0.12);
+  color: #dbeafe;
+}
+
+.deck-price-note {
+  margin: 0 0 14px;
+  font-size: 0.84rem;
+  color: #94a3b8;
+}
+
 .deck-actions {
   display: grid;
   gap: 10px;
@@ -348,6 +452,11 @@ button {
 .deck-entry p,
 .saved-deck p {
   margin: 0;
+}
+
+.deck-entry-price {
+  color: #93c5fd;
+  font-size: 0.82rem;
 }
 
 .saved-decks {
@@ -443,6 +552,17 @@ button {
 
 .card-detail-section p {
   white-space: pre-wrap;
+}
+
+@media (max-width: 900px) {
+  .card-grid-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card-zoom-control {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 1100px) {

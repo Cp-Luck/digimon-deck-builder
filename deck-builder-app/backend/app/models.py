@@ -18,6 +18,8 @@ class Card(BaseModel):
     image_url: str | None = None
     level: int | None = None
     play_cost: int | None = None
+    tcgplayer_id: int | None = None
+    tcgplayer_name: str | None = None
     count: int = Field(default=1, ge=1, le=4)
 
 

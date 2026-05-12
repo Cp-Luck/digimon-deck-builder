@@ -73,6 +73,18 @@ function renderSelect(label, value, onChange, options, emptyLabel) {
   )
 }
 
+function getMultiSelectSummary(values = [], emptyLabel) {
+  if (!values.length) {
+    return emptyLabel
+  }
+
+  if (values.length <= 2) {
+    return values.join(', ')
+  }
+
+  return `${values.slice(0, 2).join(', ')} +${values.length - 2} more`
+}
+
 export default function FilterPanel({ filters, onChange, setOptions = [], fieldOptions = {} }) {
   function updateField(key, value) {
     onChange((current) => ({ ...current, [key]: value }))
@@ -109,21 +121,67 @@ export default function FilterPanel({ filters, onChange, setOptions = [], fieldO
     <aside className="panel">
       <h2>Filters</h2>
       <div className="filter-panel">
-        {renderSelect(
-          'Color',
-          filters.color,
-          (event) => updateField('color', event.target.value),
-          colorOptions,
-          'All colors',
-        )}
+        <div className="filter-dropdown">
+          <div className="filter-section-header">
+            <span>Color</span>
+            {filters.color?.length ? (
+              <button type="button" className="filter-clear-button" onClick={() => updateField('color', [])}>
+                Clear
+              </button>
+            ) : null}
+          </div>
 
-        {renderSelect(
-          'Type',
-          filters.card_type,
-          (event) => updateField('card_type', event.target.value),
-          typeOptions,
-          'All types',
-        )}
+          <details>
+            <summary className="filter-dropdown-summary">
+              <span>{getMultiSelectSummary(filters.color || [], 'All colors')}</span>
+              <span className="filter-dropdown-caret">▾</span>
+            </summary>
+
+            <div className="checkbox-list checkbox-list-inline filter-dropdown-list">
+              {colorOptions.map((option) => (
+                <label key={`color-${option.value}`} className="checkbox-option">
+                  <input
+                    type="checkbox"
+                    checked={filters.color?.includes(option.value) || false}
+                    onChange={() => toggleMultiValue('color', option.value)}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </details>
+        </div>
+
+        <div className="filter-dropdown">
+          <div className="filter-section-header">
+            <span>Type</span>
+            {filters.card_type?.length ? (
+              <button type="button" className="filter-clear-button" onClick={() => updateField('card_type', [])}>
+                Clear
+              </button>
+            ) : null}
+          </div>
+
+          <details>
+            <summary className="filter-dropdown-summary">
+              <span>{getMultiSelectSummary(filters.card_type || [], 'All types')}</span>
+              <span className="filter-dropdown-caret">▾</span>
+            </summary>
+
+            <div className="checkbox-list filter-dropdown-list">
+              {typeOptions.map((option) => (
+                <label key={`type-${option.value}`} className="checkbox-option">
+                  <input
+                    type="checkbox"
+                    checked={filters.card_type?.includes(option.value) || false}
+                    onChange={() => toggleMultiValue('card_type', option.value)}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </details>
+        </div>
 
         {renderSelect(
           'Evolution Color',
@@ -133,15 +191,7 @@ export default function FilterPanel({ filters, onChange, setOptions = [], fieldO
           'Any evolution color',
         )}
 
-        {renderSelect(
-          'Color 2',
-          filters.color2,
-          (event) => updateField('color2', event.target.value),
-          colorOptions,
-          'Any second color',
-        )}
-
-        <div>
+        <div className="filter-dropdown">
           <div className="filter-section-header">
             <span>Set</span>
             {filters.pack?.length ? (
@@ -151,22 +201,29 @@ export default function FilterPanel({ filters, onChange, setOptions = [], fieldO
             ) : null}
           </div>
 
-          <div className="checkbox-list">
-            {setOptions.length ? (
-              setOptions.map((setName) => (
-                <label key={setName} className="checkbox-option">
-                  <input
-                    type="checkbox"
-                    checked={filters.pack?.includes(setName) || false}
-                    onChange={() => togglePackOption(setName)}
-                  />
-                  <span>{setName}</span>
-                </label>
-              ))
-            ) : (
-              <p className="card-empty">No set options loaded yet.</p>
-            )}
-          </div>
+          <details>
+            <summary className="filter-dropdown-summary">
+              <span>{getMultiSelectSummary(filters.pack || [], 'All sets')}</span>
+              <span className="filter-dropdown-caret">▾</span>
+            </summary>
+
+            <div className="checkbox-list filter-dropdown-list">
+              {setOptions.length ? (
+                setOptions.map((setName) => (
+                  <label key={setName} className="checkbox-option">
+                    <input
+                      type="checkbox"
+                      checked={filters.pack?.includes(setName) || false}
+                      onChange={() => togglePackOption(setName)}
+                    />
+                    <span>{setName}</span>
+                  </label>
+                ))
+              ) : (
+                <p className="card-empty">No set options loaded yet.</p>
+              )}
+            </div>
+          </details>
         </div>
 
         <details className="advanced-filters" open>

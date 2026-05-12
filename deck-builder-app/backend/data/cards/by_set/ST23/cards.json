@@ -209,10 +209,10 @@
     "series": "Digimon Card Game",
     "pretty_url": "ST23-06-gekkomon",
     "date_added": "2026-02-08 01:00:22",
-    "tcgplayer_name": "Gekkomon",
-    "tcgplayer_id": 678667,
+    "tcgplayer_name": "Gekkomon (Rare Pull)",
+    "tcgplayer_id": 692096,
     "set_name": [
-      "ST-23: Starter Deck Digimon Beatbreak"
+      "ST-23: STARTER DECK DIGIMON BEATBREAK"
     ]
   },
   {
@@ -247,6 +247,78 @@
     "date_added": "2026-03-22 01:04:35",
     "tcgplayer_name": "Armalizamon",
     "tcgplayer_id": 685502,
+    "set_name": [
+      "ST-23: Starter Deck Digimon Beatbreak"
+    ]
+  },
+  {
+    "name": "Monarchlizamon",
+    "type": "Digimon",
+    "id": "ST23-08",
+    "level": 5,
+    "play_cost": 7,
+    "evolution_cost": 3,
+    "evolution_color": null,
+    "evolution_level": null,
+    "xros_req": "[Digivolve] Lv.4 w/[Glowing Dawn] trait: Cost 3",
+    "color": "Green",
+    "color2": null,
+    "digi_type": "Cyborg",
+    "digi_type2": "Glowing Dawn",
+    "digi_type3": "BEATBREAK",
+    "digi_type4": null,
+    "form": null,
+    "dp": 7000,
+    "attribute": "Data",
+    "rarity": "R",
+    "stage": null,
+    "artist": null,
+    "main_effect": "＜Alliance＞ (When this Digimon attacks, by suspending 1 of your other Digimon, add the suspended Digimon's DP to this Digimon and it gains ＜Security A. +1＞ for the attack.)\r\n[On Play] [When Digivolving] This Digimon gets +3000 DP until your opponent's turn ends. Then, if it's your turn, by trashing the bottom face-down card from under any of your Tamers, you may play or use 1 [Glowing Dawn] trait card from your hand with the cost reduced by 3.",
+    "source_effect": "[End of Attack] [Once Per Turn] By trashing the bottom face-down card from under any of your Tamers, this [Glowing Dawn] trait Digimon unsuspends.",
+    "link_requirements": "|digixros =",
+    "link_dp": null,
+    "alt_effect": "[Digivolve] Lv.4 w/[Glowing Dawn] trait: Cost 3",
+    "series": "Digimon Card Game",
+    "pretty_url": "ST23-08-monarchlizamon",
+    "date_added": "2026-04-08 01:02:20",
+    "tcgplayer_name": null,
+    "tcgplayer_id": null,
+    "set_name": [
+      "ST-23: Starter Deck Digimon Beatbreak"
+    ]
+  },
+  {
+    "name": "Atratusmon",
+    "type": "Dual",
+    "id": "ST23-09",
+    "level": 6,
+    "play_cost": 5,
+    "evolution_cost": 4,
+    "evolution_color": null,
+    "evolution_level": null,
+    "xros_req": "[Digivolve] Lv.5 w/[Glowing Dawn] trait: Cost 3",
+    "color": "Green",
+    "color2": "Black",
+    "digi_type": "Mutant",
+    "digi_type2": "Glowing Dawn",
+    "digi_type3": "BEATBREAK",
+    "digi_type4": null,
+    "form": null,
+    "dp": 12000,
+    "attribute": "Data",
+    "rarity": "SR",
+    "stage": null,
+    "artist": null,
+    "main_effect": "＜Security A. +1＞ (This Digimon checks 1 additional security card.)\r\n＜Reboot＞ (This Digimon also unsuspends in your opponent's unsuspend phase.)\r\n＜Blocker＞ (This Digimon can block in the blocker timing.)\r\n[When Digivolving] [When Attacking] [Once Per Turn] Your opponent's Digimon effects don't affect this Digimon until their turn ends. Then, delete 1 of your opponent's Digimon with the lowest DP.",
+    "source_effect": "Use Requirement: BEATBREAK trait\r\n[Main] Suspend 1 of your opponent's Digimon. Then, return 1 of your opponent's suspended Digimon with the highest DP to the bottom of the deck.",
+    "link_requirements": "|digixros =",
+    "link_dp": null,
+    "alt_effect": "[Digivolve] Lv.5 w/[Glowing Dawn] trait: Cost 3",
+    "series": "Digimon Card Game",
+    "pretty_url": "ST23-09-atratusmon",
+    "date_added": "2026-04-08 01:02:21",
+    "tcgplayer_name": null,
+    "tcgplayer_id": null,
     "set_name": [
       "ST-23: Starter Deck Digimon Beatbreak"
     ]

@@ -8,8 +8,8 @@ const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 
 const defaultFilters = {
   q: '',
-  color: '',
-  card_type: '',
+  color: [],
+  card_type: [],
   pack: [],
   level: '',
   play_cost: '',
@@ -17,7 +17,6 @@ const defaultFilters = {
   evolution_color: '',
   evolution_level: '',
   xros_req: '',
-  color2: '',
   digi_type: [],
   form: '',
   dp: '',
@@ -91,6 +90,7 @@ function App() {
   const [status, setStatus] = useState('Loading cards...')
   const [loadingCards, setLoadingCards] = useState(false)
   const [lastUpdated, setLastUpdated] = useState('')
+  const [cardZoom, setCardZoom] = useState(100)
 
   const searchParams = useMemo(() => {
     const params = new URLSearchParams()
@@ -190,6 +190,8 @@ function App() {
       image_url: card.image_url || null,
       level: card.level ?? null,
       play_cost: card.play_cost ?? null,
+      tcgplayer_id: card.tcgplayer_id ?? null,
+      tcgplayer_name: card.tcgplayer_name || card.name || null,
       count: 1,
     }
 
@@ -287,7 +289,13 @@ function App() {
           setOptions={setOptions}
           fieldOptions={filterOptions}
         />
-        <CardGrid cards={cards} loading={loadingCards} onAddCard={addCard} />
+        <CardGrid
+          cards={cards}
+          loading={loadingCards}
+          onAddCard={addCard}
+          zoom={cardZoom}
+          onZoomChange={setCardZoom}
+        />
         <DeckPanel
           deck={deck}
           deckName={deckName}

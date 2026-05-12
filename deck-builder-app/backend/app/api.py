@@ -191,17 +191,22 @@ def _normalize_filter_value(field_name: str, value: Any) -> str:
     return normalized.lower()
 
 
+def _parse_filter_values(field_name: str, value: Any) -> list[str]:
+    """Split comma-separated filter values into normalized entries."""
+    return [
+        _normalize_filter_value(field_name, item)
+        for item in str(value).split(",")
+        if str(item).strip()
+    ]
+
+
 def _matches_field_filter(card: dict[str, Any], field_name: str, expected_value: str, *, exact: bool = False) -> bool:
     """Check whether a single card field matches a requested filter value."""
     if not expected_value:
         return True
 
     if field_name == "digi_type":
-        selected_values = [
-            _normalize_filter_value(field_name, value)
-            for value in str(expected_value).split(",")
-            if str(value).strip()
-        ]
+        selected_values = _parse_filter_values(field_name, expected_value)
         if not selected_values:
             return True
 
@@ -242,20 +247,27 @@ def _matches_card_filters(
     normalized_name = str(card.get("name") or "").lower()
     normalized_id = str(get_card_identifier(card) or "").lower()
     normalized_type = str(card.get("type") or "").lower()
-    normalized_color = str(card.get("color") or "").lower()
     normalized_sets = " ".join(_card_set_names(card)).lower()
     normalized_set_code = _card_set_code(card).lower()
     normalized_query = q.strip().lower()
     selected_packs = _parse_pack_filters(pack)
+    selected_colors = _parse_filter_values("color", color)
+    selected_types = _parse_filter_values("card_type", card_type)
     extra_filters = extra_filters or {}
 
     if normalized_query and normalized_query not in " ".join(
         [normalized_name, normalized_id, normalized_type, normalized_sets, normalized_set_code]
     ):
         return False
-    if color and normalized_color != color.strip().lower():
-        return False
-    if card_type and normalized_type != card_type.strip().lower():
+    if selected_colors:
+        actual_colors = {
+            _normalize_filter_value("color", value)
+            for value in (card.get("color"), card.get("color2"))
+            if value not in (None, "")
+        }
+        if not all(selected_color in actual_colors for selected_color in selected_colors):
+            return False
+    if selected_types and normalized_type not in selected_types:
         return False
     if selected_packs and normalized_set_code.upper() not in selected_packs:
         return False

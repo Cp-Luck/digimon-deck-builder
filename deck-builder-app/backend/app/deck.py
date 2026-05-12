@@ -3,8 +3,11 @@
 Main responsibilities: save decks, manage the current deck, and enforce copy limits and restriction rules.
 """
 
+import time
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from config import RESTRICTED_LIST_FILE, SAVED_DECKS_FILE
 from app.models import Card, Deck
@@ -16,6 +19,109 @@ RESTRICTED_LIST_DEFAULT = {
     "banned_cards": [],
     "banned_pairs": [],
 }
+TCGPLAYER_PRICE_CACHE_TTL_SECONDS = 60 * 30
+TCGPLAYER_PRICE_CACHE: dict[str, tuple[float | None, float]] = {}
+TCGPLAYER_REQUEST_HEADERS = {"User-Agent": "Deck Builder App/1.0"}
+
+
+def _normalize_tcgplayer_product_id(value: Any) -> str | None:
+    """Return a normalized numeric TCGplayer product ID when available."""
+    normalized = str(value or "").strip()
+    return normalized if normalized.isdigit() else None
+
+
+def _normalize_currency_value(value: Any) -> float | None:
+    """Convert a raw market-price value into a rounded currency amount."""
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return None
+    return round(max(parsed, 0.0), 2)
+
+
+def get_card_market_price(card: dict[str, Any]) -> float | None:
+    """Fetch the current TCGplayer market price for a deck card when it has a product ID."""
+    product_id = _normalize_tcgplayer_product_id(card.get("tcgplayer_id"))
+    if product_id is None:
+        return None
+
+    cached_entry = TCGPLAYER_PRICE_CACHE.get(product_id)
+    if cached_entry is not None:
+        cached_price, cached_at = cached_entry
+        if time.time() - cached_at <= TCGPLAYER_PRICE_CACHE_TTL_SECONDS:
+            return cached_price
+
+    price: float | None = None
+
+    try:
+        response = requests.get(
+            f"https://mpapi.tcgplayer.com/v2/product/{product_id}/pricepoints",
+            headers=TCGPLAYER_REQUEST_HEADERS,
+            timeout=5,
+        )
+        response.raise_for_status()
+        payload = response.json()
+
+        if isinstance(payload, list):
+            sorted_price_points = sorted(
+                [entry for entry in payload if isinstance(entry, dict)],
+                key=lambda entry: 0 if str(entry.get("printingType") or "").lower() == "normal" else 1,
+            )
+            for field_name in ("marketPrice", "listedMedianPrice", "buylistMarketPrice"):
+                for entry in sorted_price_points:
+                    price = _normalize_currency_value(entry.get(field_name))
+                    if price is not None:
+                        break
+                if price is not None:
+                    break
+    except (requests.RequestException, ValueError):
+        price = None
+
+    if price is None:
+        try:
+            response = requests.get(
+                f"https://mp-search-api.tcgplayer.com/v1/product/{product_id}/details",
+                headers=TCGPLAYER_REQUEST_HEADERS,
+                timeout=5,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            if isinstance(payload, dict):
+                price = _normalize_currency_value(payload.get("marketPrice") or payload.get("lowestPriceWithShipping"))
+        except (requests.RequestException, ValueError):
+            price = None
+
+    TCGPLAYER_PRICE_CACHE[product_id] = (price, time.time())
+    return price
+
+
+def summarize_deck_pricing(cards: list[dict[str, Any]]) -> dict[str, Any]:
+    """Calculate an estimated deck total using current TCGplayer market prices."""
+    estimated_total_cost = 0.0
+    priced_cards = 0
+    missing_price_cards = 0
+
+    for card in cards:
+        count = _normalize_count(card.get("count", 1))
+        market_price = get_card_market_price(card)
+
+        if market_price is None:
+            card["estimated_unit_price"] = None
+            card["estimated_line_cost"] = None
+            missing_price_cards += 1
+            continue
+
+        priced_cards += 1
+        line_cost = round(market_price * count, 2)
+        estimated_total_cost += line_cost
+        card["estimated_unit_price"] = market_price
+        card["estimated_line_cost"] = line_cost
+
+    return {
+        "estimated_total_cost": round(estimated_total_cost, 2),
+        "priced_cards": priced_cards,
+        "missing_price_cards": missing_price_cards,
+    }
 
 
 def _card_key(card: dict[str, Any]) -> str:
@@ -214,10 +320,14 @@ class CurrentDeckStore:
 
     def get_deck(self) -> dict[str, Any]:
         """Return the current deck payload and total card count."""
+        cards_with_pricing = [dict(card) for card in self.cards]
+        pricing_summary = summarize_deck_pricing(cards_with_pricing)
+
         return {
             "name": self.deck_name,
-            "cards": self.cards,
+            "cards": cards_with_pricing,
             "total_cards": sum(int(card.get("count", 0)) for card in self.cards),
+            **pricing_summary,
         }
 
     def set_deck(self, deck: Deck) -> dict[str, Any]:

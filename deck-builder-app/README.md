@@ -237,3 +237,25 @@ cd backend
 ## 🔗 API Source
 - `https://digimoncard.io/api-public/`
 - card pages/images are available through `https://digimoncard.io/` and `https://images.digimoncard.io/`
+
+## Running the Startup Script
+
+1. Open a terminal
+
+2. Navigate to the `script` folder:
+
+```bash
+cd script
+```
+
+3. Make the script executable:
+
+```bash
+chmod +x start_app.sh
+```
+
+4. Run the script:
+
+```bash
+./start_app.sh
+```

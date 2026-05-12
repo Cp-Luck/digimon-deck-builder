@@ -8,14 +8,28 @@ export default function DeckPanel({
   onLoadSavedDeck,
   savedDecks,
 }) {
+  const estimatedDeckCost =
+    typeof deck.estimated_total_cost === 'number' ? `$${deck.estimated_total_cost.toFixed(2)}` : '—'
+
   return (
-    <aside className="panel">
+    <aside className="panel deck-panel">
       <h2>Current Deck</h2>
 
       <div className="deck-summary">
         <span>{deck.total_cards || 0} cards</span>
         <span>{deck.cards?.length || 0} unique entries</span>
       </div>
+
+      <div className="deck-cost-summary">
+        <span>Est. TCGplayer Cost</span>
+        <strong>{estimatedDeckCost}</strong>
+      </div>
+
+      <p className="deck-price-note">
+        {deck.missing_price_cards
+          ? `Price unavailable for ${deck.missing_price_cards} ${deck.missing_price_cards === 1 ? 'entry' : 'entries'}.`
+          : 'Based on current TCGplayer market prices.'}
+      </p>
 
       <div className="deck-actions">
         <input
@@ -35,6 +49,14 @@ export default function DeckPanel({
               <div>
                 <strong>{card.name}</strong>
                 <p>{card.card_type || 'Digimon'} • x{card.count}</p>
+                {typeof card.estimated_line_cost === 'number' ? (
+                  <p className="deck-entry-price">
+                    ${card.estimated_line_cost.toFixed(2)} total
+                    {typeof card.estimated_unit_price === 'number'
+                      ? ` • $${card.estimated_unit_price.toFixed(2)} each`
+                      : ''}
+                  </p>
+                ) : null}
               </div>
               <button type="button" className="secondary-button" onClick={() => onRemoveCard(card)}>
                 Remove

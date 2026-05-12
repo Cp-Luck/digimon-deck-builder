@@ -18,6 +18,7 @@ export default function CardItem({ card, onAddCard }) {
   const setLabel = Array.isArray(card.set_name) ? card.set_name[0] : card.set_name
   const [imageFailed, setImageFailed] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
+
   const rawRestrictionLimit = card.restriction_limit
   const restrictionLimit =
     rawRestrictionLimit === null || rawRestrictionLimit === undefined || rawRestrictionLimit === ''
@@ -28,12 +29,7 @@ export default function CardItem({ card, onAddCard }) {
   const tcgplayerUrl = useMemo(() => buildTcgplayerUrl(card), [card])
 
   const imageSrc = useMemo(() => {
-    if (!card.image_url) {
-      return null
-    }
-    if (card.image_url.startsWith('/')) {
-      return card.image_url
-    }
+    if (!card.image_url) return null
     return card.image_url
   }, [card.image_url])
 
@@ -44,9 +40,7 @@ export default function CardItem({ card, onAddCard }) {
 
     const originalOverflow = document.body.style.overflow
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        setShowDetails(false)
-      }
+      if (event.key === 'Escape') setShowDetails(false)
     }
 
     document.body.style.overflow = 'hidden'
@@ -57,6 +51,25 @@ export default function CardItem({ card, onAddCard }) {
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [showDetails])
+
+  // Single click/tap → add to deck
+  function handleClick() {
+    onAddCard(card)
+  }
+
+  // Two-finger touch → view details
+  function handleTouchStart(event) {
+    if (event.touches.length === 2) {
+      event.preventDefault()
+      setShowDetails(true)
+    }
+  }
+
+  // Right-click / two-finger trackpad tap → view details
+  function handleContextMenu(event) {
+    event.preventDefault()
+    setShowDetails(true)
+  }
 
   function renderCardArt(extraClassName = '') {
     return (
@@ -174,8 +187,10 @@ export default function CardItem({ card, onAddCard }) {
         <button
           type="button"
           className="card-art-button"
-          onClick={() => setShowDetails(true)}
-          aria-label={`Open enlarged view for ${card.name || 'card'}`}
+          onClick={handleClick}
+          onContextMenu={handleContextMenu}
+          onTouchStart={handleTouchStart}
+          aria-label={`Add ${card.name || 'card'} to deck`}
         >
           {renderCardArt()}
         </button>
@@ -186,7 +201,7 @@ export default function CardItem({ card, onAddCard }) {
           <p>{card.type || 'Unknown type'} • {colorLabel}</p>
           <p>Level: {card.level ?? '—'} • Cost: {card.play_cost ?? '—'}</p>
           <p>{setLabel || 'Set not listed yet'}</p>
-          <p className="card-preview-hint">Click image to enlarge and view details.</p>
+          <p className="card-preview-hint">Click to add · Right-click for details</p>
         </div>
 
         <div className="card-actions">
