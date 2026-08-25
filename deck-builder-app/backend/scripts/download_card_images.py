@@ -19,9 +19,11 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.storage import get_card_identifier, load_cards
-from config import IMAGES_DIR, REQUEST_DELAY, REMOTE_IMAGE_BASE_URL
+from config import IMAGES_DIR, REMOTE_IMAGE_BASE_URL, REQUEST_DELAY
 
-CARD_IMAGE_PATTERN = re.compile(r"https://images\.digimoncard\.io/images/cards/[^\"'>]+")
+CARD_IMAGE_PATTERN = re.compile(
+    r"https://images\.digimoncard\.io/images/cards/[^\"'>]+"
+)
 
 
 def build_remote_image_url(card_id: str | None) -> str | None:
@@ -31,7 +33,9 @@ def build_remote_image_url(card_id: str | None) -> str | None:
     return f"{REMOTE_IMAGE_BASE_URL}/{card_id.strip().upper()}.webp"
 
 
-def scrape_image_url_from_page(card: dict[str, Any], session: requests.Session) -> str | None:
+def scrape_image_url_from_page(
+    card: dict[str, Any], session: requests.Session
+) -> str | None:
     """Scrape the card page for an image URL when the direct URL is unavailable."""
     pretty_url = str(card.get("pretty_url") or "").strip()
     if not pretty_url:
@@ -66,7 +70,9 @@ def download_single_card_image(
         build_remote_image_url(card_id),
     ]
 
-    image_url = next((url for url in candidate_urls if isinstance(url, str) and url.strip()), None)
+    image_url = next(
+        (url for url in candidate_urls if isinstance(url, str) and url.strip()), None
+    )
 
     if image_url is None:
         image_url = scrape_image_url_from_page(card, session)
@@ -88,7 +94,9 @@ def download_single_card_image(
     return card_id, True, image_url
 
 
-def download_card_images(limit: int | None = None, force: bool = False) -> tuple[int, int]:
+def download_card_images(
+    limit: int | None = None, force: bool = False
+) -> tuple[int, int]:
     """Download local images for all cards or just a limited subset."""
     cards = load_cards()
     selected_cards = cards[:limit] if limit else cards
@@ -96,14 +104,18 @@ def download_card_images(limit: int | None = None, force: bool = False) -> tuple
 
     with requests.Session() as session:
         for index, card in enumerate(selected_cards, start=1):
-            card_id, downloaded, status = download_single_card_image(card, session=session, force=force)
+            card_id, downloaded, status = download_single_card_image(
+                card, session=session, force=force
+            )
             if card_id is None:
                 print(f"[{index}/{len(selected_cards)}] Skipped card with no id")
                 continue
 
             if downloaded:
                 downloaded_count += 1
-                print(f"[{index}/{len(selected_cards)}] Downloaded {card_id} -> {status}")
+                print(
+                    f"[{index}/{len(selected_cards)}] Downloaded {card_id} -> {status}"
+                )
             else:
                 print(f"[{index}/{len(selected_cards)}] Skipped {card_id}: {status}")
 
@@ -112,13 +124,26 @@ def download_card_images(limit: int | None = None, force: bool = False) -> tuple
 
 def main() -> None:
     """Parse CLI arguments and run the local image download sync."""
-    parser = argparse.ArgumentParser(description="Download Digimon card images for local use.")
-    parser.add_argument("--limit", type=int, default=None, help="Only download the first N cards for testing.")
-    parser.add_argument("--force", action="store_true", help="Re-download files even if they already exist.")
+    parser = argparse.ArgumentParser(
+        description="Download Digimon card images for local use."
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Only download the first N cards for testing.",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-download files even if they already exist.",
+    )
     args = parser.parse_args()
 
     total, downloaded = download_card_images(limit=args.limit, force=args.force)
-    print(f"Finished image sync. Downloaded {downloaded} of {total} checked cards into {IMAGES_DIR}.")
+    print(
+        f"Finished image sync. Downloaded {downloaded} of {total} checked cards into {IMAGES_DIR}."
+    )
 
 
 if __name__ == "__main__":

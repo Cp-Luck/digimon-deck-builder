@@ -99,7 +99,9 @@ def resolve_card_image_url(card: dict[str, Any]) -> str | None:
     )
 
 
-def _normalize_card(card: dict[str, Any], card_limits: dict[str, int] | None = None) -> dict[str, Any]:
+def _normalize_card(
+    card: dict[str, Any], card_limits: dict[str, int] | None = None
+) -> dict[str, Any]:
     """Convert raw card payloads into the frontend-friendly API shape."""
     return {
         "id": get_card_identifier(card),
@@ -200,7 +202,9 @@ def _parse_filter_values(field_name: str, value: Any) -> list[str]:
     ]
 
 
-def _matches_field_filter(card: dict[str, Any], field_name: str, expected_value: str, *, exact: bool = False) -> bool:
+def _matches_field_filter(
+    card: dict[str, Any], field_name: str, expected_value: str, *, exact: bool = False
+) -> bool:
     """Check whether a single card field matches a requested filter value."""
     if not expected_value:
         return True
@@ -215,7 +219,11 @@ def _matches_field_filter(card: dict[str, Any], field_name: str, expected_value:
             for digi_field in DIGI_TYPE_FIELDS
             if card.get(digi_field) not in (None, "")
         ]
-        return any(selected_value == actual_value for selected_value in selected_values for actual_value in actual_values)
+        return any(
+            selected_value == actual_value
+            for selected_value in selected_values
+            for actual_value in actual_values
+        )
 
     raw_value = card.get(field_name)
     if raw_value is None:
@@ -223,7 +231,9 @@ def _matches_field_filter(card: dict[str, Any], field_name: str, expected_value:
 
     if isinstance(raw_value, (list, tuple, set)):
         normalized_actual = " ".join(
-            _normalize_filter_value(field_name, item) for item in raw_value if item is not None
+            _normalize_filter_value(field_name, item)
+            for item in raw_value
+            if item is not None
         )
     else:
         normalized_actual = _normalize_filter_value(field_name, raw_value)
@@ -232,7 +242,11 @@ def _matches_field_filter(card: dict[str, Any], field_name: str, expected_value:
     if not normalized_actual:
         return False
 
-    return normalized_actual == normalized_expected if exact else normalized_expected in normalized_actual
+    return (
+        normalized_actual == normalized_expected
+        if exact
+        else normalized_expected in normalized_actual
+    )
 
 
 def _matches_card_filters(
@@ -255,9 +269,8 @@ def _matches_card_filters(
     selected_types = _parse_filter_values("card_type", card_type)
     extra_filters = extra_filters or {}
 
-    if normalized_query and normalized_query not in " ".join(
-        [normalized_name, normalized_id, normalized_type, normalized_sets, normalized_set_code]
-    ):
+    searchable_text = f"{normalized_name} {normalized_id} {normalized_type} {normalized_sets} {normalized_set_code}"
+    if normalized_query and normalized_query not in searchable_text:
         return False
     if selected_colors:
         actual_colors = {
@@ -265,7 +278,9 @@ def _matches_card_filters(
             for value in (card.get("color"), card.get("color2"))
             if value not in (None, "")
         }
-        if not all(selected_color in actual_colors for selected_color in selected_colors):
+        if not all(
+            selected_color in actual_colors for selected_color in selected_colors
+        ):
             return False
     if selected_types and normalized_type not in selected_types:
         return False

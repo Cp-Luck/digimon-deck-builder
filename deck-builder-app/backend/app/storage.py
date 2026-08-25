@@ -59,7 +59,9 @@ def card_needs_refresh(card: dict[str, Any]) -> bool:
     card_type = str(card.get("type") or "").strip().lower()
     if card_type == "digimon":
         digimon_required_fields = ("play_cost", "level")
-        if any(key in card and card.get(key) is None for key in digimon_required_fields):
+        if any(
+            key in card and card.get(key) is None for key in digimon_required_fields
+        ):
             return True
         if "dp" in card and card.get("dp") is None and card.get("link_dp") is None:
             return True

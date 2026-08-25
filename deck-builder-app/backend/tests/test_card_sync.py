@@ -21,7 +21,10 @@ def test_dedupe_cards_keeps_unique_cardnumbers():
 
     assert len(deduped) == 2
     assert {card["cardnumber"] for card in deduped} == {"BT1-001", "BT1-002"}
-    assert next(card for card in deduped if card["cardnumber"] == "BT1-001")["name"] == "Agumon Updated"
+    assert (
+        next(card for card in deduped if card["cardnumber"] == "BT1-001")["name"]
+        == "Agumon Updated"
+    )
 
 
 def test_update_cards_only_fetches_missing_numbers(monkeypatch):
@@ -43,28 +46,35 @@ def test_update_cards_only_fetches_missing_numbers(monkeypatch):
 
     monkeypatch.setattr(updater, "search_card_by_number", fake_search)
     monkeypatch.setattr(updater, "save_last_updated", lambda: None)
-    monkeypatch.setattr(updater, "save_cards", lambda cards: saved_payload.setdefault("cards", cards))
+    monkeypatch.setattr(
+        updater, "save_cards", lambda cards: saved_payload.setdefault("cards", cards)
+    )
 
     updater.update_cards()
 
     assert searched_numbers == ["BT1-002"]
     assert len(saved_payload["cards"]) == 2
-    assert {card["cardnumber"] for card in saved_payload["cards"]} == {"BT1-001", "BT1-002"}
+    assert {card["cardnumber"] for card in saved_payload["cards"]} == {
+        "BT1-001",
+        "BT1-002",
+    }
 
 
 def test_update_cards_refreshes_incomplete_saved_cards(monkeypatch):
     """Ensure incomplete cached cards are re-fetched to fill in missing data."""
-    existing_cards = [{
-        "id": "ST21-04",
-        "name": "New Card",
-        "type": "Digimon",
-        "color": "Red",
-        "rarity": None,
-        "set_name": [],
-        "play_cost": None,
-        "level": None,
-        "dp": None,
-    }]
+    existing_cards = [
+        {
+            "id": "ST21-04",
+            "name": "New Card",
+            "type": "Digimon",
+            "color": "Red",
+            "rarity": None,
+            "set_name": [],
+            "play_cost": None,
+            "level": None,
+            "dp": None,
+        }
+    ]
     basic_cards = [{"id": "ST21-04"}]
     searched_numbers: list[str] = []
     saved_payload: dict[str, list[dict]] = {}
@@ -88,7 +98,9 @@ def test_update_cards_refreshes_incomplete_saved_cards(monkeypatch):
 
     monkeypatch.setattr(updater, "search_card_by_number", fake_search)
     monkeypatch.setattr(updater, "save_last_updated", lambda: None)
-    monkeypatch.setattr(updater, "save_cards", lambda cards: saved_payload.__setitem__("cards", cards))
+    monkeypatch.setattr(
+        updater, "save_cards", lambda cards: saved_payload.__setitem__("cards", cards)
+    )
 
     updater.update_cards()
 
@@ -103,8 +115,12 @@ def test_sync_and_sort_cards_runs_update_then_sort(monkeypatch):
     calls: list[str] = []
 
     monkeypatch.setattr(sync_and_sort, "update_cards", lambda: calls.append("update"))
-    monkeypatch.setattr(sync_and_sort, "sort_cards_by_set", lambda: calls.append("sort"))
-    monkeypatch.setattr(sync_and_sort, "summarize_card_fields", lambda: calls.append("summarize"))
+    monkeypatch.setattr(
+        sync_and_sort, "sort_cards_by_set", lambda: calls.append("sort")
+    )
+    monkeypatch.setattr(
+        sync_and_sort, "summarize_card_fields", lambda: calls.append("summarize")
+    )
 
     sync_and_sort.sync_and_sort_cards()
 

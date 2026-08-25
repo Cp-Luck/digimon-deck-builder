@@ -72,7 +72,15 @@ def test_build_field_summary_normalizes_and_orders_rarity_values():
     summary = summary_script.build_field_summary(cards)
 
     assert list(summary["rarity"].keys()) == ["C", "U", "R", "SR", "SEC", "P", "UR"]
-    assert summary["rarity"] == {"C": 2, "U": 2, "R": 2, "SR": 2, "SEC": 2, "P": 2, "UR": 2}
+    assert summary["rarity"] == {
+        "C": 2,
+        "U": 2,
+        "R": 2,
+        "SR": 2,
+        "SEC": 2,
+        "P": 2,
+        "UR": 2,
+    }
 
 
 def test_write_summary_markdown_outputs_grouped_bullets(tmp_path: Path):

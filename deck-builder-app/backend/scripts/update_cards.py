@@ -3,9 +3,9 @@
 Main function: `update_cards()`, which fetches missing or incomplete cards and saves progress along the way.
 """
 
-from pathlib import Path
 import sys
 import time
+from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -13,10 +13,19 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.api import get_all_cards_basic, search_card_by_number
-from app.storage import card_needs_refresh, dedupe_cards, get_card_identifier, load_cards, save_cards, save_last_updated
+from app.storage import (
+    card_needs_refresh,
+    dedupe_cards,
+    get_card_identifier,
+    load_cards,
+    save_cards,
+    save_last_updated,
+)
 
 
-def fetch_card_details(card_id: str, retries: int = 3, retry_delay: float = 2.0) -> list[dict[str, Any]]:
+def fetch_card_details(
+    card_id: str, retries: int = 3, retry_delay: float = 2.0
+) -> list[dict[str, Any]]:
     """Fetch card details with retry handling for transient API failures."""
     last_error: Exception | None = None
 
@@ -28,7 +37,7 @@ def fetch_card_details(card_id: str, retries: int = 3, retry_delay: float = 2.0)
             if isinstance(details, dict):
                 return [details]
             return []
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — retry loop: any failure should trigger a retry, not just specific exception types
             last_error = exc
             if attempt < retries:
                 print(f"Retrying {card_id} ({attempt}/{retries}) after error: {exc}")
@@ -49,7 +58,8 @@ def update_cards() -> None:
     refresh_ids = {
         card_id
         for card in existing_cards
-        if (card_id := get_card_identifier(card)) is not None and card_needs_refresh(card)
+        if (card_id := get_card_identifier(card)) is not None
+        and card_needs_refresh(card)
     }
 
     pending_ids: list[str] = []
@@ -100,7 +110,7 @@ def update_cards() -> None:
                 save_cards(full_cards)
 
             print(f"[{index}/{total_pending}] Saved {card_id}")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — one bad card ID shouldn't abort the whole batch update
             failed_ids.append(card_id)
             print(f"[{index}/{total_pending}] Failed for {card_id}: {exc}")
 
@@ -109,7 +119,9 @@ def update_cards() -> None:
     save_last_updated()
 
     added_count = len(deduped_cards) - len(existing_cards)
-    print(f"Card database updated. Added {added_count} new unique cards. Total saved: {len(deduped_cards)}")
+    print(
+        f"Card database updated. Added {added_count} new unique cards. Total saved: {len(deduped_cards)}"
+    )
 
     if failed_ids:
         print(f"Missing after update ({len(failed_ids)}): {', '.join(failed_ids)}")

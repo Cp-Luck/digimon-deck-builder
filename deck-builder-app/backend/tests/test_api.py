@@ -4,7 +4,6 @@ Main coverage: search filters, deck CRUD routes, image URL behavior, and deck va
 """
 
 import json
-from pathlib import Path
 
 from fastapi.testclient import TestClient
 
@@ -26,13 +25,13 @@ def test_health_check():
 
 def test_create_and_fetch_deck(tmp_path, monkeypatch):
     """Ensure decks can be created and retrieved through the API."""
-    monkeypatch.setattr(api_module, "deck_manager", DeckManager(tmp_path / "saved_decks.json"))
+    monkeypatch.setattr(
+        api_module, "deck_manager", DeckManager(tmp_path / "saved_decks.json")
+    )
 
     payload = {
         "name": "Starter Deck",
-        "cards": [
-            {"name": "Agumon", "card_type": "Digimon", "count": 4}
-        ]
+        "cards": [{"name": "Agumon", "card_type": "Digimon", "count": 4}],
     }
 
     create_response = client.post("/api/decks", json=payload)
@@ -46,8 +45,20 @@ def test_create_and_fetch_deck(tmp_path, monkeypatch):
 def test_search_cards_from_local_cache(monkeypatch):
     """Verify local search filters return the expected cached card results."""
     sample_cards = [
-        {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "set_name": ["BT-01"]},
-        {"id": "BT1-002", "name": "Gabumon", "type": "Digimon", "color": "Blue", "set_name": ["BT-01"]},
+        {
+            "id": "BT1-001",
+            "name": "Agumon",
+            "type": "Digimon",
+            "color": "Red",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-002",
+            "name": "Gabumon",
+            "type": "Digimon",
+            "color": "Blue",
+            "set_name": ["BT-01"],
+        },
     ]
     monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
 
@@ -61,9 +72,27 @@ def test_search_cards_from_local_cache(monkeypatch):
 def test_search_cards_accepts_multiple_set_filters(monkeypatch):
     """Ensure the set filter accepts multiple folder-based set codes at once."""
     sample_cards = [
-        {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "set_name": ["BT-01"]},
-        {"id": "EX1-001", "name": "Mugendramon", "type": "Digimon", "color": "Black", "set_name": ["EX-01"]},
-        {"id": "ST1-01", "name": "Greymon", "type": "Digimon", "color": "Red", "set_name": ["ST-01"]},
+        {
+            "id": "BT1-001",
+            "name": "Agumon",
+            "type": "Digimon",
+            "color": "Red",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "EX1-001",
+            "name": "Mugendramon",
+            "type": "Digimon",
+            "color": "Black",
+            "set_name": ["EX-01"],
+        },
+        {
+            "id": "ST1-01",
+            "name": "Greymon",
+            "type": "Digimon",
+            "color": "Red",
+            "set_name": ["ST-01"],
+        },
     ]
     monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
 
@@ -77,9 +106,27 @@ def test_search_cards_accepts_multiple_set_filters(monkeypatch):
 def test_search_cards_accepts_multiple_type_values(monkeypatch):
     """Ensure the type filter can match any selected value from a checkbox dropdown."""
     sample_cards = [
-        {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "set_name": ["BT-01"]},
-        {"id": "BT1-090", "name": "Gaia Force", "type": "Option", "color": "Red", "set_name": ["BT-01"]},
-        {"id": "BT1-087", "name": "Tai Kamiya", "type": "Tamer", "color": "Red", "set_name": ["BT-01"]},
+        {
+            "id": "BT1-001",
+            "name": "Agumon",
+            "type": "Digimon",
+            "color": "Red",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-090",
+            "name": "Gaia Force",
+            "type": "Option",
+            "color": "Red",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-087",
+            "name": "Tai Kamiya",
+            "type": "Tamer",
+            "color": "Red",
+            "set_name": ["BT-01"],
+        },
     ]
     monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
 
@@ -93,9 +140,30 @@ def test_search_cards_accepts_multiple_type_values(monkeypatch):
 def test_search_cards_requires_all_selected_colors_across_color_and_color2(monkeypatch):
     """Ensure multi-color filtering uses AND matching across primary and secondary colors."""
     sample_cards = [
-        {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "color2": None, "set_name": ["BT-01"]},
-        {"id": "BT1-002", "name": "Omnimon Alter-S", "type": "Digimon", "color": "Red", "color2": "Blue", "set_name": ["BT-01"]},
-        {"id": "BT1-003", "name": "Imperialdramon", "type": "Digimon", "color": "Green", "color2": "Blue", "set_name": ["BT-01"]},
+        {
+            "id": "BT1-001",
+            "name": "Agumon",
+            "type": "Digimon",
+            "color": "Red",
+            "color2": None,
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-002",
+            "name": "Omnimon Alter-S",
+            "type": "Digimon",
+            "color": "Red",
+            "color2": "Blue",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-003",
+            "name": "Imperialdramon",
+            "type": "Digimon",
+            "color": "Green",
+            "color2": "Blue",
+            "set_name": ["BT-01"],
+        },
     ]
     monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
 
@@ -247,10 +315,38 @@ def test_get_card_sets_returns_unique_sorted_options(tmp_path, monkeypatch):
 def test_search_cards_rarity_filter_matches_exact_canonical_rarity(monkeypatch):
     """Ensure selecting rarity R only returns R cards, including lowercase source values."""
     sample_cards = [
-        {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "rarity": "R", "set_name": ["BT-01"]},
-        {"id": "BT1-002", "name": "Greymon", "type": "Digimon", "color": "Red", "rarity": "SR", "set_name": ["BT-01"]},
-        {"id": "BT1-003", "name": "Birdramon", "type": "Digimon", "color": "Red", "rarity": "r", "set_name": ["BT-01"]},
-        {"id": "BT1-004", "name": "Omnimon", "type": "Digimon", "color": "White", "rarity": "UR", "set_name": ["BT-01"]},
+        {
+            "id": "BT1-001",
+            "name": "Agumon",
+            "type": "Digimon",
+            "color": "Red",
+            "rarity": "R",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-002",
+            "name": "Greymon",
+            "type": "Digimon",
+            "color": "Red",
+            "rarity": "SR",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-003",
+            "name": "Birdramon",
+            "type": "Digimon",
+            "color": "Red",
+            "rarity": "r",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-004",
+            "name": "Omnimon",
+            "type": "Digimon",
+            "color": "White",
+            "rarity": "UR",
+            "set_name": ["BT-01"],
+        },
     ]
     monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
 
@@ -273,7 +369,10 @@ def test_get_card_filter_options_returns_summary_data(tmp_path, monkeypatch):
     response = client.get("/api/cards/filter-options")
 
     assert response.status_code == 200
-    assert response.json()["filters"] == {"rarity": {"C": 10, "R": 8}, "digi_type": {"Dragon": 4}}
+    assert response.json()["filters"] == {
+        "rarity": {"C": 10, "R": 8},
+        "digi_type": {"Dragon": 4},
+    }
 
 
 def test_search_cards_exposes_restriction_limits(tmp_path, monkeypatch):
@@ -284,9 +383,27 @@ def test_search_cards_exposes_restriction_limits(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     sample_cards = [
-        {"id": "BT1-001", "name": "Agumon", "type": "Digimon", "color": "Red", "set_name": ["BT-01"]},
-        {"id": "BT1-002", "name": "Gabumon", "type": "Digimon", "color": "Blue", "set_name": ["BT-01"]},
-        {"id": "BT1-003", "name": "Patamon", "type": "Digimon", "color": "Yellow", "set_name": ["BT-01"]},
+        {
+            "id": "BT1-001",
+            "name": "Agumon",
+            "type": "Digimon",
+            "color": "Red",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-002",
+            "name": "Gabumon",
+            "type": "Digimon",
+            "color": "Blue",
+            "set_name": ["BT-01"],
+        },
+        {
+            "id": "BT1-003",
+            "name": "Patamon",
+            "type": "Digimon",
+            "color": "Yellow",
+            "set_name": ["BT-01"],
+        },
     ]
     monkeypatch.setattr(deck_module, "RESTRICTED_LIST_FILE", restriction_file)
     monkeypatch.setattr(api_module, "load_cards", lambda: sample_cards)
@@ -377,7 +494,9 @@ def test_create_deck_rejects_more_than_four_copies():
 def test_add_card_to_current_deck_rejects_restricted_limit(tmp_path, monkeypatch):
     """Ensure restriction-file copy limits are enforced during active deck updates."""
     restriction_file = tmp_path / "restricted_list.json"
-    restriction_file.write_text(json.dumps({"card_limits": {"BT1-001": 1}}), encoding="utf-8")
+    restriction_file.write_text(
+        json.dumps({"card_limits": {"BT1-001": 1}}), encoding="utf-8"
+    )
     monkeypatch.setattr(deck_module, "RESTRICTED_LIST_FILE", restriction_file)
     monkeypatch.setattr(api_module, "current_deck_store", CurrentDeckStore())
 
@@ -397,9 +516,13 @@ def test_add_card_to_current_deck_rejects_restricted_limit(tmp_path, monkeypatch
 def test_create_deck_rejects_banned_card_from_restricted_list(tmp_path, monkeypatch):
     """Ensure saved decks cannot include cards listed as banned."""
     restriction_file = tmp_path / "restricted_list.json"
-    restriction_file.write_text(json.dumps({"banned_cards": ["BT1-001"]}), encoding="utf-8")
+    restriction_file.write_text(
+        json.dumps({"banned_cards": ["BT1-001"]}), encoding="utf-8"
+    )
     monkeypatch.setattr(deck_module, "RESTRICTED_LIST_FILE", restriction_file)
-    monkeypatch.setattr(api_module, "deck_manager", DeckManager(tmp_path / "saved_decks.json"))
+    monkeypatch.setattr(
+        api_module, "deck_manager", DeckManager(tmp_path / "saved_decks.json")
+    )
 
     response = client.post(
         "/api/decks",
@@ -423,7 +546,9 @@ def test_create_deck_rejects_banned_pair_from_restricted_list(tmp_path, monkeypa
         encoding="utf-8",
     )
     monkeypatch.setattr(deck_module, "RESTRICTED_LIST_FILE", restriction_file)
-    monkeypatch.setattr(api_module, "deck_manager", DeckManager(tmp_path / "saved_decks.json"))
+    monkeypatch.setattr(
+        api_module, "deck_manager", DeckManager(tmp_path / "saved_decks.json")
+    )
 
     response = client.post(
         "/api/decks",
@@ -431,7 +556,12 @@ def test_create_deck_rejects_banned_pair_from_restricted_list(tmp_path, monkeypa
             "name": "Banned Pair Deck",
             "cards": [
                 {"id": "BT1-001", "name": "Agumon", "card_type": "Digimon", "count": 1},
-                {"id": "BT1-002", "name": "Gabumon", "card_type": "Digimon", "count": 1},
+                {
+                    "id": "BT1-002",
+                    "name": "Gabumon",
+                    "card_type": "Digimon",
+                    "count": 1,
+                },
             ],
         },
     )
@@ -457,12 +587,17 @@ def test_search_cards_uses_remote_image_fallback(monkeypatch):
     response = client.get("/api/cards/search", params={"q": "agumon"})
 
     assert response.status_code == 200
-    assert response.json()["cards"][0]["image_url"] == "https://images.digimoncard.io/images/cards/BT1-010.webp"
+    assert (
+        response.json()["cards"][0]["image_url"]
+        == "https://images.digimoncard.io/images/cards/BT1-010.webp"
+    )
 
 
 def test_normalize_card_prefers_local_image_when_available(monkeypatch):
     """Verify that locally downloaded images take priority over remote URLs."""
-    monkeypatch.setattr(api_module, "get_local_image_url", lambda card_id: f"/images/{card_id}.webp")
+    monkeypatch.setattr(
+        api_module, "get_local_image_url", lambda card_id: f"/images/{card_id}.webp"
+    )
 
     normalized = api_module._normalize_card(
         {

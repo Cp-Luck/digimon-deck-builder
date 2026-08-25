@@ -78,7 +78,9 @@ def field_value_sort_key(field_name: str, item: tuple[str, int]) -> tuple[Any, .
     return (-count, value.lower())
 
 
-def build_field_summary(cards: list[dict[str, Any]], minimum_count: int = 2) -> dict[str, dict[str, int]]:
+def build_field_summary(
+    cards: list[dict[str, Any]], minimum_count: int = 2
+) -> dict[str, dict[str, int]]:
     """Count repeated values for each card field and drop entries that appear only once."""
     counts_by_field: dict[str, Counter[str]] = defaultdict(Counter)
 
@@ -91,7 +93,9 @@ def build_field_summary(cards: list[dict[str, Any]], minimum_count: int = 2) -> 
             if normalized_field in EXCLUDED_FIELDS:
                 continue
             for normalized_value in extract_field_values(raw_value):
-                canonical_value = normalize_field_value(normalized_field, normalized_value)
+                canonical_value = normalize_field_value(
+                    normalized_field, normalized_value
+                )
                 if canonical_value:
                     counts_by_field[normalized_field][canonical_value] += 1
 
@@ -111,13 +115,19 @@ def build_field_summary(cards: list[dict[str, Any]], minimum_count: int = 2) -> 
     return summary
 
 
-def write_summary_json(summary: dict[str, dict[str, int]], output_path: Path = SUMMARY_JSON_FILE) -> None:
+def write_summary_json(
+    summary: dict[str, dict[str, int]], output_path: Path = SUMMARY_JSON_FILE
+) -> None:
     """Write the grouped field summary to a JSON file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
+    output_path.write_text(
+        json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
 
 
-def write_summary_markdown(summary: dict[str, dict[str, int]], output_path: Path = SUMMARY_MARKDOWN_FILE) -> None:
+def write_summary_markdown(
+    summary: dict[str, dict[str, int]], output_path: Path = SUMMARY_MARKDOWN_FILE
+) -> None:
     """Write the grouped field summary to a readable markdown report with bullet lists."""
     lines = [
         "# Card Field Value Summary",

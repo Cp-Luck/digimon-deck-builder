@@ -9,12 +9,12 @@ from typing import Any
 
 import requests
 
-from config import RESTRICTED_LIST_FILE, SAVED_DECKS_FILE
 from app.models import Card, Deck
 from app.utils import load_json, save_json
+from config import RESTRICTED_LIST_FILE, SAVED_DECKS_FILE
 
 MAX_COPIES_PER_CARD = 4
-RESTRICTED_LIST_DEFAULT = {
+RESTRICTED_LIST_DEFAULT: dict[str, Any] = {
     "card_limits": {},
     "banned_cards": [],
     "banned_pairs": [],
@@ -65,9 +65,15 @@ def get_card_market_price(card: dict[str, Any]) -> float | None:
         if isinstance(payload, list):
             sorted_price_points = sorted(
                 [entry for entry in payload if isinstance(entry, dict)],
-                key=lambda entry: 0 if str(entry.get("printingType") or "").lower() == "normal" else 1,
+                key=lambda entry: (
+                    0 if str(entry.get("printingType") or "").lower() == "normal" else 1
+                ),
             )
-            for field_name in ("marketPrice", "listedMedianPrice", "buylistMarketPrice"):
+            for field_name in (
+                "marketPrice",
+                "listedMedianPrice",
+                "buylistMarketPrice",
+            ):
                 for entry in sorted_price_points:
                     price = _normalize_currency_value(entry.get(field_name))
                     if price is not None:
@@ -87,7 +93,9 @@ def get_card_market_price(card: dict[str, Any]) -> float | None:
             response.raise_for_status()
             payload = response.json()
             if isinstance(payload, dict):
-                price = _normalize_currency_value(payload.get("marketPrice") or payload.get("lowestPriceWithShipping"))
+                price = _normalize_currency_value(
+                    payload.get("marketPrice") or payload.get("lowestPriceWithShipping")
+                )
         except (requests.RequestException, ValueError):
             price = None
 
@@ -155,9 +163,15 @@ def load_restricted_list() -> dict[str, Any]:
         return dict(RESTRICTED_LIST_DEFAULT)
 
     return {
-        "card_limits": data.get("card_limits", {}) if isinstance(data.get("card_limits"), dict) else {},
-        "banned_cards": data.get("banned_cards", []) if isinstance(data.get("banned_cards"), list) else [],
-        "banned_pairs": data.get("banned_pairs", []) if isinstance(data.get("banned_pairs"), list) else [],
+        "card_limits": data.get("card_limits", {})
+        if isinstance(data.get("card_limits"), dict)
+        else {},
+        "banned_cards": data.get("banned_cards", [])
+        if isinstance(data.get("banned_cards"), list)
+        else [],
+        "banned_pairs": data.get("banned_pairs", [])
+        if isinstance(data.get("banned_pairs"), list)
+        else [],
     }
 
 
@@ -189,7 +203,9 @@ def get_card_limits() -> dict[str, int]:
     return _load_card_limits()
 
 
-def get_card_limit(card_or_value: dict[str, Any] | Any, card_limits: dict[str, int] | None = None) -> int | None:
+def get_card_limit(
+    card_or_value: dict[str, Any] | Any, card_limits: dict[str, int] | None = None
+) -> int | None:
     """Return the allowed copy count for a specific restricted card, if one exists."""
     if isinstance(card_or_value, dict):
         lookup_value = card_or_value.get("id") or card_or_value.get("name")
@@ -233,12 +249,16 @@ def validate_deck_cards(cards: list[dict[str, Any]]) -> None:
     for key, card in present_cards.items():
         allowed_copies = card_limits.get(key, MAX_COPIES_PER_CARD)
         if allowed_copies <= 0:
-            raise ValueError(f"{_card_label(card)} is banned and cannot be included in decks.")
+            raise ValueError(
+                f"{_card_label(card)} is banned and cannot be included in decks."
+            )
 
         current_count = int(card.get("count", 1))
         if current_count > allowed_copies:
             copy_word = "copy" if allowed_copies == 1 else "copies"
-            raise ValueError(f"{_card_label(card)} is limited to {allowed_copies} {copy_word} per deck.")
+            raise ValueError(
+                f"{_card_label(card)} is limited to {allowed_copies} {copy_word} per deck."
+            )
 
     for first_key, second_key in _load_banned_pairs():
         if first_key in present_cards and second_key in present_cards:

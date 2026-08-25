@@ -3,7 +3,7 @@ function slugifyTcgplayerPart(value) {
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/&/g, ' and ')
-    .replace(/["'.,()\[\]:/]+/g, ' ')
+    .replace(/["'.,()[\]:/]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase()

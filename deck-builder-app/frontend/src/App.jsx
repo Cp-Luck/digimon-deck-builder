@@ -127,6 +127,12 @@ function App() {
 
   useEffect(() => {
     fetchCards()
+    // fetchCards is redefined every render but always closes over the
+    // current searchParams, and this effect is already correctly gated on
+    // searchParams itself -- adding the function to the dep array would
+    // just re-run this on every render instead of only when the query
+    // actually changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
   useEffect(() => {

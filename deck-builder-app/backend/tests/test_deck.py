@@ -10,7 +10,12 @@ actual API or rate limits.
 import requests
 
 import app.deck as deck_module
-from app.deck import CurrentDeckStore, DeckManager, get_card_market_price, summarize_deck_pricing
+from app.deck import (
+    CurrentDeckStore,
+    DeckManager,
+    get_card_market_price,
+    summarize_deck_pricing,
+)
 from app.models import Card, Deck
 
 
@@ -70,10 +75,12 @@ def test_get_card_market_price_prefers_normal_printing_type(monkeypatch):
     preferred over foil/other variants, regardless of list order."""
 
     def fake_get(url, headers=None, timeout=None):
-        return _FakeRequestsResponse([
-            {"printingType": "Foil", "marketPrice": 99.0},
-            {"printingType": "Normal", "marketPrice": 2.25},
-        ])
+        return _FakeRequestsResponse(
+            [
+                {"printingType": "Foil", "marketPrice": 99.0},
+                {"printingType": "Normal", "marketPrice": 2.25},
+            ]
+        )
 
     monkeypatch.setattr(deck_module.requests, "get", fake_get)
     monkeypatch.setattr(deck_module, "TCGPLAYER_PRICE_CACHE", {})
@@ -139,12 +146,18 @@ def test_summarize_deck_pricing_aggregates_priced_and_unpriced_cards(monkeypatch
 def test_current_deck_exposes_estimated_total_cost(monkeypatch):
     """Ensure the current deck payload includes an estimated TCGplayer-based cost total."""
     store = CurrentDeckStore()
-    store.cards = [{"id": "BT1-010", "name": "Agumon", "count": 2, "tcgplayer_id": 483247}]
+    store.cards = [
+        {"id": "BT1-010", "name": "Agumon", "count": 2, "tcgplayer_id": 483247}
+    ]
 
     monkeypatch.setattr(
         deck_module,
         "summarize_deck_pricing",
-        lambda cards: {"estimated_total_cost": 1.5, "priced_cards": 1, "missing_price_cards": 0},
+        lambda cards: {
+            "estimated_total_cost": 1.5,
+            "priced_cards": 1,
+            "missing_price_cards": 0,
+        },
         raising=False,
     )
 
@@ -153,5 +166,3 @@ def test_current_deck_exposes_estimated_total_cost(monkeypatch):
     assert deck["estimated_total_cost"] == 1.5
     assert deck["priced_cards"] == 1
     assert deck["missing_price_cards"] == 0
-
-
