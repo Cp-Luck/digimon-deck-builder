@@ -4,6 +4,10 @@ A full-stack deck builder for the Digimon TCG: search a local card database, bui
 
 **4,207 cards indexed · 38 automated tests · CI (backend + frontend)**
 
+![Card search, filters, and a deck with live TCGplayer pricing](docs/deck-builder-screenshot.jpg)
+
+*Screenshotted from a running instance — the deck shown has real cards priced from live TCGplayer data ($51.51 estimated total), not mocked numbers.*
+
 Not a card scanner — decks are built by searching/filtering the local card database, not by scanning physical cards.
 
 ## Problem
@@ -71,6 +75,10 @@ chmod +x start_app.sh
 ### Deck construction rules
 
 `app/deck.py` enforces real Digimon TCG deck-construction rules against `data/restricted_list.json`, not just a hardcoded max: a 4-copy default limit, per-card limits for restricted cards (some cards are capped at 1 or 2), fully banned cards, and banned pairs (cards that can't appear in the same deck together). Validation runs both when adding a single card and when saving/loading a whole deck, so a saved deck can't silently violate a rule that was added after it was created.
+
+![Rejecting a card over its restricted-list copy limit, with a real error message shown](docs/deck-validation-screenshot.jpg)
+
+*Shakkoumon (BT23-032) is limited to 1 copy per the restricted list — adding a second copy is rejected with the actual backend error message, not a silently emptied deck (see [Engineering Decisions](#engineering-decisions)).*
 
 ### Backend
 
