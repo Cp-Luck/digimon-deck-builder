@@ -1,12 +1,15 @@
-# 🃏 Deck Builder App
+# 🃏 Digimon Deck Builder
 
-A Digimon deck builder with a **React frontend** and **FastAPI backend**, backed by a locally cached card database.
+A Digimon TCG deck builder with a **React frontend** and **FastAPI backend**, backed by a locally cached card database and live TCGplayer pricing lookups.
+
+Not a card scanner — decks are built by searching/filtering the local card database, not by scanning physical cards.
 
 ---
 
 ## 📁 Project Structure
 
 ```text
+README.md
 deck-builder-app/
 ├─ backend/
 │  ├─ app/                 # FastAPI routes, models, deck logic, storage helpers
@@ -20,7 +23,7 @@ deck-builder-app/
 │  ├─ main.py              # FastAPI app entry point
 │  └─ requirements.txt
 ├─ frontend/               # React + Vite UI
-└─ README.md
+└─ script/                 # start_app.sh convenience launcher
 ```
 
 ---
@@ -30,7 +33,7 @@ deck-builder-app/
 ### 1) Backend
 
 ```bash
-cd backend
+cd deck-builder-app/backend
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
@@ -43,7 +46,7 @@ Backend URLs:
 ### 2) Frontend
 
 ```bash
-cd frontend
+cd deck-builder-app/frontend
 npm install
 npm run dev
 ```
@@ -82,8 +85,8 @@ What it does:
 Run it:
 
 ```bash
-cd backend
-/Users/calebpham/Documents/programing/DigimonCard_Recognizer/.venv/bin/python scripts/update_cards.py
+cd deck-builder-app/backend
+python scripts/update_cards.py
 ```
 
 ---
@@ -101,8 +104,8 @@ It also creates:
 Run it:
 
 ```bash
-cd backend
-/Users/calebpham/Documents/programing/DigimonCard_Recognizer/.venv/bin/python scripts/sortall_cards.py
+cd deck-builder-app/backend
+python scripts/sortall_cards.py
 ```
 
 ---
@@ -113,15 +116,15 @@ Downloads card photos for local use and serves them through FastAPI.
 Run a small test batch:
 
 ```bash
-cd backend
-/Users/calebpham/Documents/programing/DigimonCard_Recognizer/.venv/bin/python scripts/download_card_images.py --limit 50
+cd deck-builder-app/backend
+python scripts/download_card_images.py --limit 50
 ```
 
 Download the full set:
 
 ```bash
-cd backend
-/Users/calebpham/Documents/programing/DigimonCard_Recognizer/.venv/bin/python scripts/download_card_images.py
+cd deck-builder-app/backend
+python scripts/download_card_images.py
 ```
 
 Downloaded images are stored in:
@@ -228,8 +231,8 @@ Notable frontend files:
 Run backend tests:
 
 ```bash
-cd backend
-/Users/calebpham/Documents/programing/DigimonCard_Recognizer/.venv/bin/python -m pytest -q
+cd deck-builder-app/backend
+python -m pytest -q
 ```
 
 ---
@@ -245,7 +248,7 @@ cd backend
 2. Navigate to the `script` folder:
 
 ```bash
-cd script
+cd deck-builder-app/script
 ```
 
 3. Make the script executable:
