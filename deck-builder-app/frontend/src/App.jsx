@@ -79,6 +79,21 @@ function normalizeDeckOrder(deckData) {
   }
 }
 
+// FastAPI validation failures (banned card, over the copy limit, etc.) come
+// back as `{"detail": "..."}` with a non-2xx status. Every deck-mutating
+// call below routes its response through this instead of parsing the body
+// unconditionally — otherwise an error body gets treated as a deck payload,
+// and normalizeDeckOrder's `cards: sortCardsById(deckData?.cards || [])`
+// silently turns "banned card" into "your deck is now empty" with no
+// indication anything went wrong.
+async function parseDeckResponse(response) {
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.detail || `Request failed (${response.status})`)
+  }
+  return data
+}
+
 function App() {
   const [filters, setFilters] = useState(defaultFilters)
   const [cards, setCards] = useState([])
@@ -195,13 +210,17 @@ function App() {
       count: 1,
     }
 
-    const response = await fetch(`${API_BASE}/deck/add`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    const data = await response.json()
-    setDeck(normalizeDeckOrder(data))
+    try {
+      const response = await fetch(`${API_BASE}/deck/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await parseDeckResponse(response)
+      setDeck(normalizeDeckOrder(data))
+    } catch (error) {
+      setStatus(`Could not add card: ${error.message}`)
+    }
   }
 
   async function removeCard(card) {
@@ -212,19 +231,27 @@ function App() {
       count: 1,
     }
 
-    const response = await fetch(`${API_BASE}/deck/remove`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    const data = await response.json()
-    setDeck(normalizeDeckOrder(data))
+    try {
+      const response = await fetch(`${API_BASE}/deck/remove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await parseDeckResponse(response)
+      setDeck(normalizeDeckOrder(data))
+    } catch (error) {
+      setStatus(`Could not remove card: ${error.message}`)
+    }
   }
 
   async function clearDeck() {
-    const response = await fetch(`${API_BASE}/deck/clear`, { method: 'POST' })
-    const data = await response.json()
-    setDeck(normalizeDeckOrder(data))
+    try {
+      const response = await fetch(`${API_BASE}/deck/clear`, { method: 'POST' })
+      const data = await parseDeckResponse(response)
+      setDeck(normalizeDeckOrder(data))
+    } catch (error) {
+      setStatus(`Could not clear deck: ${error.message}`)
+    }
   }
 
   async function saveDeck() {
@@ -233,34 +260,42 @@ function App() {
       return
     }
 
-    const response = await fetch(`${API_BASE}/decks`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: deckName.trim() || 'My Digimon Deck',
-        cards: deck.cards,
-      }),
-    })
-    const data = await response.json()
-    setStatus(data.message || 'Deck saved successfully.')
-    setDeckName(data.deck?.name || deckName)
-    fetchSavedDecks()
+    try {
+      const response = await fetch(`${API_BASE}/decks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: deckName.trim() || 'My Digimon Deck',
+          cards: deck.cards,
+        }),
+      })
+      const data = await parseDeckResponse(response)
+      setStatus(data.message || 'Deck saved successfully.')
+      setDeckName(data.deck?.name || deckName)
+      fetchSavedDecks()
+    } catch (error) {
+      setStatus(`Could not save deck: ${error.message}`)
+    }
   }
 
   async function loadSavedDeck(name) {
-    const response = await fetch(`${API_BASE}/decks/${encodeURIComponent(name)}`)
-    const data = await response.json()
+    try {
+      const response = await fetch(`${API_BASE}/decks/${encodeURIComponent(name)}`)
+      const data = await parseDeckResponse(response)
 
-    const loadResponse = await fetch(`${API_BASE}/deck/load`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    const loadedDeck = await loadResponse.json()
+      const loadResponse = await fetch(`${API_BASE}/deck/load`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      const loadedDeck = await parseDeckResponse(loadResponse)
 
-    setDeck(normalizeDeckOrder(loadedDeck))
-    setDeckName(data.name || name)
-    setStatus(`Loaded saved deck: ${name}`)
+      setDeck(normalizeDeckOrder(loadedDeck))
+      setDeckName(data.name || name)
+      setStatus(`Loaded saved deck: ${name}`)
+    } catch (error) {
+      setStatus(`Could not load saved deck: ${error.message}`)
+    }
   }
 
   return (
